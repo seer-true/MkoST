@@ -116,7 +116,7 @@ var
   pExportDir: PImageExportDirectory;
   pNameRVAs: PDWORD;
   pName: PAnsiChar;
-  i: Integer;
+  i: Cardinal; // Integer;
   ExportName: string;
   ExportOrdinal: Word;
   DllBase: Pointer;

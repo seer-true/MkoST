@@ -10,6 +10,7 @@ object frmMain: TfrmMain
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  PixelsPerInch = 96
   TextHeight = 15
   object Memo1: TMemo
     Left = 0
@@ -20,8 +21,8 @@ object frmMain: TfrmMain
     Lines.Strings = (
       'Memo1')
     TabOrder = 0
-    ExplicitWidth = 620
-    ExplicitHeight = 440
+    ExplicitLeft = -8
+    ExplicitTop = 15
   end
   object Panel1: TPanel
     Left = 0
@@ -56,6 +57,15 @@ object frmMain: TfrmMain
       Caption = 'btnBinSearch'
       TabOrder = 2
       OnClick = btnBinSearchClick
+    end
+    object btnShellCommand: TButton
+      Left = 355
+      Top = 6
+      Width = 131
+      Height = 25
+      Caption = 'btnShellCommand'
+      TabOrder = 3
+      OnClick = btnShellCommandClick
     end
   end
   object OpenDialog1: TOpenDialog

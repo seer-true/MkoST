@@ -4,7 +4,8 @@ uses
   Vcl.Forms,
   MainFrm in 'MainFrm.pas' {frmMain},
   DllExportsViewer in 'DllExportsViewer.pas',
-  FileSearchUtils in 'FileSearchUtils.pas';
+  FileSearchUtils in 'FileSearchUtils.pas',
+  AsyncShellCommand in 'AsyncShellCommand.pas';
 
 {$R *.res}
 
