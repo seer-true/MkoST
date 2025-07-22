@@ -1,3 +1,8 @@
+/// <summary>
+///   Функционал выполнения Shell-команды с отслеживанием процесса выполнения и завершения запуска (например, CLI
+///   архивирования файлов/папки). <i>Вызывающая программа не должна зависать, при запуске продолжительной по времени
+///   выполнения команды.</i>
+/// </summary>
 unit AsyncShellCommand;
 
 interface
@@ -24,6 +29,9 @@ type
   protected
     procedure Execute; override;
   public
+    /// <summary>
+    ///   поиск вхождений последовательности символов в файле
+    /// </summary>
     constructor Create(const Command, Parameters: string);
     property OnCompleted: TCommandCompletedEvent read FOnCompleted write FOnCompleted;
   end;

@@ -43,11 +43,11 @@ var
 begin
   Output := TStringList.Create;
   try
-    // Поиск двух последовательностей в DLL
+// поиск последовательностей в DLL
     Results := FindBinaryPatternsInFile('D:\DevelopXE\Declen\OUT\Win32\Debug\PadegUC.dll', ['GetIFPadeg', 'GetIFPadegFS'], 100
-      // Максимальное количество результатов для каждого шаблона
+      // макс. к-о результатов
       );
-    // Вывод результатов
+// вывод результатов
     for i := 0 to High(Results) do
     begin
       Output.Add(Format('Шаблон "%s" найден %d раз:', [Results[i].Pattern, Results[i].Count]));
@@ -55,7 +55,6 @@ begin
         Output.Add(Format('  Позиция: 0x%x', [Results[i].Positions[j]]));
     end;
     Memo1.Lines.Text := Output.Text;
-// ShowMessage(Output.Text);
   finally
     Output.Free;
   end;
@@ -69,16 +68,14 @@ begin
   begin
     DllFileName := OpenDialog1.FileName;
     Memo1.Clear;
-// StatusBar.Panels[0].Text := 'Анализ...';
+    Memo1.Lines.Add('Поиск функций...');
     try
       ShowDllExports(DllFileName, TStringList(Memo1.Lines));
       Memo1.Lines.Add(Format('Готово. Найдено %d экспортов', [Memo1.Lines.Count]))
-// StatusBar.Panels[0].Text := Format('Готово. Найдено %d экспортов', [Memo1.Lines.Count]);
     except
       on E: Exception do
       begin
         Memo1.Lines.Add('Ошибка: ' + E.Message);
-// StatusBar.Panels[0].Text := 'Ошибка анализа';
       end;
     end;
   end;
@@ -91,10 +88,10 @@ var
   i: Integer;
 begin
   try
-    // Поиск всех txt и doc файлов в Documents и подпапках
+// поиск всех txt и doc файлов в Documents и подпапках
     FileCount := FindFilesByMask(['*.txt', '*.doc'], 'C:\Users\plahovsv\Documents\', FileList, [fsRecursive] // Искать в подпапках
       );
-    // Выводим результаты
+
     Memo1.Lines.Add(Format('Найдено файлов: %d', [FileCount]));
     for i := 0 to FileList.Count - 1 do
       Memo1.Lines.Add(FileList[i]);
@@ -108,12 +105,10 @@ begin
   Memo1.Lines.Clear;
   Memo1.Lines.Add('Запуск архивации...');
 
-  ArchiveWith7ZipAsync(
-    'C:\temp',
-    'D:\archive.zip',
+  ArchiveWith7ZipAsync('C:\temp', 'D:\archive.7z',
     procedure(const Msg: string; ExitCode: Cardinal)
     begin
-      // Потокобезопасное обновление Memo1
+// обновление Memo1
       TThread.Queue(nil,
         procedure
         begin
@@ -123,14 +118,8 @@ begin
           else
             Memo1.Lines.Add('Ошибка! Проверьте исходные данные.');
           Memo1.Lines.Add('----------------------------------');
-        end
-      );
-    end
-  );
-  (* if ExitCode = 0 then
-        ShowMessage('Архивация успешна!')
-      else
-        ShowMessage('Ошибка архивации (код: ' + IntToStr(ExitCode) + ')'); *)
+        end);
+    end);
 end;
 
 end.

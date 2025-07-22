@@ -21,8 +21,6 @@ object frmMain: TfrmMain
     Lines.Strings = (
       'Memo1')
     TabOrder = 0
-    ExplicitLeft = -8
-    ExplicitTop = 15
   end
   object Panel1: TPanel
     Left = 0
