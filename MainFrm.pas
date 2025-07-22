@@ -8,13 +8,13 @@ uses
 
 type
   TfrmMain = class(TForm)
-    OpenDialog1: TOpenDialog;
     Memo1: TMemo;
     Panel1: TPanel;
     btnDll: TButton;
     btnSearch: TButton;
     btnBinSearch: TButton;
     btnShellCommand: TButton;
+    FileOpenDialog1: TFileOpenDialog;
     procedure btnDllClick(Sender: TObject);
     procedure btnSearchClick(Sender: TObject);
     procedure btnBinSearchClick(Sender: TObject);
@@ -64,19 +64,17 @@ procedure TfrmMain.btnDllClick(Sender: TObject);
 var
   DllFileName: string;
 begin
-  if OpenDialog1.Execute then
-  begin
-    DllFileName := OpenDialog1.FileName;
+   FileOpenDialog1.Options := [];
+  if FileOpenDialog1.Execute then begin
+    DllFileName := FileOpenDialog1.FileName;
     Memo1.Clear;
     Memo1.Lines.Add('Поиск функций...');
     try
       ShowDllExports(DllFileName, TStringList(Memo1.Lines));
-      Memo1.Lines.Add(Format('Готово. Найдено %d экспортов', [Memo1.Lines.Count]))
+      Memo1.Lines.Add(Format('Готово. Найдено %d ф-ций', [Memo1.Lines.Count]))
     except
       on E: Exception do
-      begin
         Memo1.Lines.Add('Ошибка: ' + E.Message);
-      end;
     end;
   end;
 end;
@@ -89,6 +87,10 @@ var
 begin
   try
 // поиск всех txt и doc файлов в Documents и подпапках
+    FileOpenDialog1.Options := [fdoPickFolders(*, fdoPathMustExist, fdoForceFileSystem*)];
+    FileOpenDialog1.Execute;
+    Exit();
+
     FileCount := FindFilesByMask(['*.txt', '*.doc'], 'C:\Users\plahovsv\Documents\', FileList, [fsRecursive] // Искать в подпапках
       );
 

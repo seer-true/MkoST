@@ -1,5 +1,4 @@
 program mkos;
-
 uses
   Vcl.Forms,
   MainFrm in 'MainFrm.pas' {frmMain},
@@ -8,7 +7,6 @@ uses
   AsyncShellCommand in 'AsyncShellCommand.pas';
 
 {$R *.res}
-
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;

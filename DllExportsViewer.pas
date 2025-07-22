@@ -12,7 +12,7 @@ type
   end;
 
   /// <summary>
-  ///   Результат поиска последовательности символов
+  /// Результат поиска последовательности символов
   /// </summary>
   TBinarySearchResult = record
     Pattern: AnsiString;
@@ -22,9 +22,9 @@ type
 
   TBinarySearchResults = TArray<TBinarySearchResult>;
 
-/// <summary>
-/// Имена экспортируемый функций из DLL
-/// </summary>
+  /// <summary>
+  /// Имена экспортируемый функций из DLL
+  /// </summary>
 procedure ShowDllExports(const DllFileName: string; OutputList: TStringList);
 /// <summary>
 /// поиск вхождений последовательности символов в файле DLL
@@ -77,7 +77,7 @@ begin
       pName := PAnsiChar(PByte(DllBase) + pNameRVAs^);
       ExportName := string(pName);
       ExportOrdinal := pExportDir^.Base + i;
-      OutputList.Add(Format('%-40s : Ordinal %d', [ExportName, ExportOrdinal]));
+      OutputList.Add(Format('%-40s', [ExportName]));
       Inc(pNameRVAs);
     end;
   finally
@@ -111,21 +111,21 @@ begin
     FileSize := FileStream.Size;
     TotalRead := 0;
     MaxBufferSize := 1024 * 1024; // 1MB буфер
-//минимальный размер буфера (макс. длина шаблона + перекрытие)
+    // минимальный размер буфера (макс. длина шаблона + перекрытие)
     for i := 0 to High(Patterns) do
       if Length(Patterns[i]) > MaxBufferSize then
         MaxBufferSize := Length(Patterns[i]) * 2;
     SetLength(Buffer, MaxBufferSize);
-// Читаем файл блоками
+    // Читаем файл блоками
     while TotalRead < FileSize do
     begin
       BytesRead := FileStream.Read(Buffer[0], MaxBufferSize);
       if BytesRead = 0 then
         Break;
-// поиск каждого шаблона в текущем буфере
+      // поиск каждого шаблона в текущем буфере
       for i := 0 to High(Patterns) do
       begin
-// пропускаем если уже нашли максимальное количество результатов
+        // пропускаем если уже нашли максимальное количество результатов
         if (MaxResults > 0) and (Result[i].Count >= MaxResults) then
           Continue;
         for j := 0 to BytesRead - Length(Patterns[i]) do
@@ -141,17 +141,17 @@ begin
           end;
           if PatternFound then
           begin
-// добавляем позицию (с учетом ранее прочитанных данных)
+            // добавляем позицию (с учетом ранее прочитанных данных)
             SetLength(Result[i].Positions, Length(Result[i].Positions) + 1);
             Result[i].Positions[High(Result[i].Positions)] := TotalRead + j;
-// конец поиска если достигли MaxResults
+            // конец поиска если достигли MaxResults
             if (MaxResults > 0) and (Result[i].Count >= MaxResults) then
               Break;
           end;
         end;
       end;
       Inc(TotalRead, BytesRead);
-// назад для перекрытия (чтобы не пропустить шаблоны на границе блоков)
+      // назад для перекрытия (чтобы не пропустить шаблоны на границе блоков)
       if TotalRead < FileSize then
         FileStream.Position := FileStream.Position - Length(Patterns[High(Patterns)]) + 1;
     end;

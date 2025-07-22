@@ -10,7 +10,6 @@ object frmMain: TfrmMain
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  PixelsPerInch = 96
   TextHeight = 15
   object Memo1: TMemo
     Left = 0
@@ -18,9 +17,9 @@ object frmMain: TfrmMain
     Width = 624
     Height = 454
     Align = alClient
-    Lines.Strings = (
-      'Memo1')
     TabOrder = 0
+    ExplicitWidth = 620
+    ExplicitHeight = 453
   end
   object Panel1: TPanel
     Left = 0
@@ -29,6 +28,8 @@ object frmMain: TfrmMain
     Height = 40
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 453
+    ExplicitWidth = 620
     object btnDll: TButton
       Left = 30
       Top = 6
@@ -66,8 +67,11 @@ object frmMain: TfrmMain
       OnClick = btnShellCommandClick
     end
   end
-  object OpenDialog1: TOpenDialog
-    Left = 340
-    Top = 130
+  object FileOpenDialog1: TFileOpenDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = []
+    Left = 128
+    Top = 104
   end
 end
