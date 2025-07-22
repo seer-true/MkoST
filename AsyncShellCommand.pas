@@ -8,6 +8,11 @@ uses
 type
   TCommandCompletedEvent = reference to procedure(const Msg: string; ExitCode: Cardinal);
 
+procedure ArchiveWith7ZipAsync(const SourcePath: string; const ArchiveName: string; OnCompleted: TCommandCompletedEvent);
+
+implementation
+
+type
   TAsyncCommandRunner = class(TThread)
   private
     FCommand: string;
@@ -23,16 +28,7 @@ type
     property OnCompleted: TCommandCompletedEvent read FOnCompleted write FOnCompleted;
   end;
 
-  procedure ArchiveWith7ZipAsync(
-    const SourcePath: string;
-    const ArchiveName: string;
-    OnCompleted: TCommandCompletedEvent
-  );
-
-implementation
-
 { TAsyncCommandRunner }
-
 constructor TAsyncCommandRunner.Create(const Command, Parameters: string);
 begin
   inherited Create(True);
@@ -51,7 +47,6 @@ begin
   SEInfo.lpFile := PChar(FCommand);
   SEInfo.lpParameters := PChar(FParameters);
   SEInfo.nShow := SW_HIDE;
-
   if ShellExecuteEx(@SEInfo) then
   begin
     WaitForSingleObject(SEInfo.hProcess, INFINITE);
@@ -73,18 +68,19 @@ begin
     FOnCompleted(FOutputMsg, FExitCode);
 end;
 
-procedure ArchiveWith7ZipAsync(
-  const SourcePath: string;
-  const ArchiveName: string;
-  OnCompleted: TCommandCompletedEvent
-);
+procedure ArchiveWith7ZipAsync(const SourcePath: string; const ArchiveName: string; OnCompleted: TCommandCompletedEvent);
 var
   Runner: TAsyncCommandRunner;
   Params: string;
 begin
-  Params := Format('a -tzip "%s" "%s" -mx9 -ssw -mmt=on',
-    [ArchiveName, IncludeTrailingPathDelimiter(SourcePath) + '*']);
-
+  Params := Format('a -t7z "%s" "%s" -mx9 -ssw -mmt=on', [ArchiveName, IncludeTrailingPathDelimiter(SourcePath) + '*']);
+//  'a -tzip "D:\archive.zip" "C:\temp\*" -mx9 -ssw -mmt=on'
+(*  a - add files
+  -tzip - zip aрхив
+  -mx9 - уровень сжатия
+  -ssw - compress shared files
+  -mmt - set number of CPU threads
+*)
   Runner := TAsyncCommandRunner.Create('C:\Program Files\7-Zip\7z.exe', Params);
   Runner.OnCompleted := OnCompleted;
   Runner.Start;
