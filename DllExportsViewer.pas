@@ -3,41 +3,14 @@ unit DllExportsViewer;
 interface
 
 uses
-  Windows, SysUtils, Classes, Generics.Collections;
-
-type
-  TExportInfo = record
-    Name: string;
-    Ordinal: Word;
-  end;
-
-  /// <summary>
-  /// Результат поиска последовательности символов
-  /// </summary>
-  TBinarySearchResult = record
-    Pattern: AnsiString;
-    Positions: TArray<Int64>;
-    function Count: Integer;
-  end;
-
-  TBinarySearchResults = TArray<TBinarySearchResult>;
+  Windows, SysUtils, Classes;
 
   /// <summary>
   /// Имена экспортируемый функций из DLL
   /// </summary>
 procedure ShowDllExports(const DllFileName: string; OutputList: TStringList);
-/// <summary>
-/// поиск вхождений последовательности символов в файле DLL
-/// </summary>
-function FindBinaryPatternsInFile(const FileName: string; const Patterns: array of AnsiString; MaxResults: Integer = 0): TBinarySearchResults;
 
 implementation
-
-{ TBinarySearchResult }
-function TBinarySearchResult.Count: Integer;
-begin
-  Result := Length(Positions);
-end;
 
 procedure ShowDllExports(const DllFileName: string; OutputList: TStringList);
 var
@@ -82,81 +55,6 @@ begin
     end;
   finally
     FreeLibrary(hDll);
-  end;
-end;
-
-function FindBinaryPatternsInFile(const FileName: string; const Patterns: array of AnsiString; MaxResults: Integer = 0): TBinarySearchResults;
-var
-  FileStream: TFileStream;
-  Buffer: array of Byte;
-  BytesRead: Integer;
-  i, j, k: Integer;
-  PatternFound: Boolean;
-  FileSize, TotalRead: Int64;
-  MaxBufferSize: Integer;
-begin
-  if not FileExists(FileName) then
-    raise Exception.Create('Файл не найден: ' + FileName);
-  if Length(Patterns) = 0 then
-    raise Exception.Create('Не заданы шаблоны для поиска');
-
-  SetLength(Result, Length(Patterns));
-  for i := 0 to High(Result) do
-  begin
-    Result[i].Pattern := Patterns[i];
-    SetLength(Result[i].Positions, 0);
-  end;
-  FileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
-  try
-    FileSize := FileStream.Size;
-    TotalRead := 0;
-    MaxBufferSize := 1024 * 1024; // 1MB буфер
-    // минимальный размер буфера (макс. длина шаблона + перекрытие)
-    for i := 0 to High(Patterns) do
-      if Length(Patterns[i]) > MaxBufferSize then
-        MaxBufferSize := Length(Patterns[i]) * 2;
-    SetLength(Buffer, MaxBufferSize);
-    // Читаем файл блоками
-    while TotalRead < FileSize do
-    begin
-      BytesRead := FileStream.Read(Buffer[0], MaxBufferSize);
-      if BytesRead = 0 then
-        Break;
-      // поиск каждого шаблона в текущем буфере
-      for i := 0 to High(Patterns) do
-      begin
-        // пропускаем если уже нашли максимальное количество результатов
-        if (MaxResults > 0) and (Result[i].Count >= MaxResults) then
-          Continue;
-        for j := 0 to BytesRead - Length(Patterns[i]) do
-        begin
-          PatternFound := True;
-          for k := 1 to Length(Patterns[i]) do
-          begin
-            if Buffer[j + k - 1] <> Ord(Patterns[i][k]) then
-            begin
-              PatternFound := False;
-              Break;
-            end;
-          end;
-          if PatternFound then
-          begin
-            // добавляем позицию (с учетом ранее прочитанных данных)
-            SetLength(Result[i].Positions, Length(Result[i].Positions) + 1);
-            Result[i].Positions[High(Result[i].Positions)] := TotalRead + j;
-            // конец поиска если достигли MaxResults
-            if (MaxResults > 0) and (Result[i].Count >= MaxResults) then
-              Break;
-          end;
-        end;
-      end;
-      Inc(TotalRead, BytesRead);
-      // назад для перекрытия (чтобы не пропустить шаблоны на границе блоков)
-      if TotalRead < FileSize then
-        FileStream.Position := FileStream.Position - Length(Patterns[High(Patterns)]) + 1;
-    end;
-  finally
-    FileStream.Free;
   end;
 end;
 
