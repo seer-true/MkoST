@@ -15,13 +15,18 @@ type
     btnBinSearch: TButton;
     btnShellCommand: TButton;
     FileOpenDialog1: TFileOpenDialog;
+    chkAbort: TCheckBox;
+    pSett: TPanel;
     grpAtrFiles: TGroupBox;
     mMaskFiles: TMemo;
     chHiddenSys: TCheckBox;
+    grpPatterns: TGroupBox;
+    mPatterns: TMemo;
     procedure btnDllClick(Sender: TObject);
     procedure btnSearchClick(Sender: TObject);
     procedure btnBinSearchClick(Sender: TObject);
     procedure btnShellCommandClick(Sender: TObject);
+    procedure chkAbortClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -38,28 +43,43 @@ uses
 
 {$R *.dfm}
 
+var
+  AbortSearch: Boolean;
+
 procedure TfrmMain.btnBinSearchClick(Sender: TObject);
 var
   Results: TBinarySearchResults;
   i, j: Integer;
   Output: TStringList;
+  Patterns: array of AnsiString;
 begin
   Output := TStringList.Create;
   try
-// поиск последовательностей в DLL
-    Results := FindBinaryPatternsInFile('D:\DevelopXE\Declen\OUT\Win32\Debug\PadegUC.dll', ['GetIFPadeg', 'GetIFPadegFS'], 100
-      // макс. к-о результатов
-      );
+    chkAbort.Visible := True;
+    FileOpenDialog1.Options := [];
+    if FileOpenDialog1.Execute then begin
+
+    SetLength(Patterns, mPatterns.Lines.Count);
+    for i := 0 to mPatterns.Lines.Count - 1 do
+      Patterns[i] := mPatterns.Lines[i];
+
+      // поиск последовательностей в DLL
+      Results := FindBinaryPatternsInFile(FileOpenDialog1.FileName (*'D:\DevelopXE\Declen\OUT\Win32\Debug\PadegUC.dll'*),
+        Patterns(*['GetIFPadeg', 'GetIFPadegFS']*), 100000,
+// макс. к-о результатов
+        AbortSearch);
 // вывод результатов
-    for i := 0 to High(Results) do
-    begin
-      Output.Add(Format('Шаблон "%s" найден %d раз:', [Results[i].Pattern, Results[i].Count]));
-      for j := 0 to High(Results[i].Positions) do
-        Output.Add(Format('  Позиция: 0x%x', [Results[i].Positions[j]]));
+      for i := 0 to High(Results) do
+      begin
+        Output.Add(Format('Шаблон "%s" найден %d раз:', [Results[i].Pattern, Results[i].Count]));
+        for j := 0 to High(Results[i].Positions) do
+          Output.Add(Format('  Позиция: 0x%x', [Results[i].Positions[j]]));
+      end;
+      mRes.Lines.Text := Output.Text;
     end;
-    mRes.Lines.Text := Output.Text;
   finally
     Output.Free;
+    chkAbort.Visible := False;
   end;
 end;
 
@@ -136,6 +156,11 @@ begin
           mRes.Lines.Add('----------------------------------');
         end);
     end);
+end;
+
+procedure TfrmMain.chkAbortClick(Sender: TObject);
+begin
+  AbortSearch := chkAbort.Checked;
 end;
 
 end.

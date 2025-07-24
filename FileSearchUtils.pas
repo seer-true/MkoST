@@ -46,9 +46,31 @@ function FindFilesByMask(const Masks: array of string; // Маски файлов (например
 /// <summary>
 /// поиск вхождений последовательности символов в файле DLL
 /// </summary>
-function FindBinaryPatternsInFile(const FileName: string; const Patterns: array of AnsiString; MaxResults: Integer = 0): TBinarySearchResults;
-
+(*function FindBinaryPatternsInFile(const FileName: string;
+                                const Patterns: array of AnsiString;
+                                MaxResults: Integer = 0): TBinarySearchResults;*)
+function FindBinaryPatternsInFile(const FileName: string;
+                                const Patterns: array of AnsiString;
+                                MaxResults: Integer;
+                                var ShouldAbort: Boolean): TBinarySearchResults;
 implementation
+
+uses Winapi.Windows, Winapi.Messages;
+
+procedure ProcMess;
+var
+  Msg: TMsg;
+begin
+  while true do
+  begin
+    if not PeekMessage(Msg, 0, 0, 0, PM_REMOVE) then Break;
+    if Msg.Message <> WM_QUIT then
+    begin
+      TranslateMessage(Msg);
+      DispatchMessage(Msg);
+    end;
+  end;
+end;
 
 { TBinarySearchResult }
 function TBinarySearchResult.Count: Integer;
@@ -103,8 +125,11 @@ begin
   end;
 end;
 
-function FindBinaryPatternsInFile(const FileName: string; const Patterns: array of AnsiString; MaxResults: Integer = 0): TBinarySearchResults;
-var
+//function FindBinaryPatternsInFile(const FileName: string; const Patterns: array of AnsiString; MaxResults: Integer = 0): TBinarySearchResults;
+function FindBinaryPatternsInFile(const FileName: string;
+                                const Patterns: array of AnsiString;
+                                MaxResults: Integer;
+                                var ShouldAbort: Boolean): TBinarySearchResults;var
   FileStream: TFileStream;
   Buffer: array of Byte;
   BytesRead: Integer;
@@ -124,6 +149,7 @@ begin
     Result[i].Pattern := Patterns[i];
     SetLength(Result[i].Positions, 0);
   end;
+
   FileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
   try
     FileSize := FileStream.Size;
@@ -134,20 +160,24 @@ begin
       if Length(Patterns[i]) > MaxBufferSize then
         MaxBufferSize := Length(Patterns[i]) * 2;
     SetLength(Buffer, MaxBufferSize);
-    // Читаем файл блоками
-    while TotalRead < FileSize do
+
+    while TotalRead < FileSize do // Читаем файл блоками
     begin
       BytesRead := FileStream.Read(Buffer[0], MaxBufferSize);
       if BytesRead = 0 then
         Break;
+
       // поиск каждого шаблона в текущем буфере
       for i := 0 to High(Patterns) do
       begin
         // пропускаем если уже нашли максимальное количество результатов
         if (MaxResults > 0) and (Result[i].Count >= MaxResults) then
           Continue;
+
         for j := 0 to BytesRead - Length(Patterns[i]) do
         begin
+          if ShouldAbort then Break; // проверка на прерывание
+
           PatternFound := True;
           for k := 1 to Length(Patterns[i]) do
           begin
@@ -156,7 +186,9 @@ begin
               PatternFound := False;
               Break;
             end;
+            ProcMess;
           end;
+
           if PatternFound then
           begin
             // добавляем позицию (с учетом ранее прочитанных данных)
@@ -168,7 +200,9 @@ begin
           end;
         end;
       end;
+
       Inc(TotalRead, BytesRead);
+
       // назад для перекрытия (чтобы не пропустить шаблоны на границе блоков)
       if TotalRead < FileSize then
         FileStream.Position := FileStream.Position - Length(Patterns[High(Patterns)]) + 1;
