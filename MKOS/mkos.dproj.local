@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.900,=D:\Insures\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.272,=D:\Insures\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.067,=D:\Insures\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.556,D:\DevelopXE\MKOS\mkos.dproj=D:\Insures\Project1.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.880,D:\DevelopXE\MKOS\MainForm.dfm=D:\Insures\Unit1.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.245,=D:\DevelopXE\MKOS\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.846,D:\DevelopXE\MKOS\TaskInterface.pas=D:\DevelopXE\MKOS\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.880,D:\DevelopXE\MKOS\MainForm.pas=D:\Insures\Unit1.pas</Transaction>
+  </Transactions>
+</BorlandProject>

@@ -1,0 +1,168 @@
+unit FileSearchImpl;
+
+interface
+
+uses
+  System.Classes, System.SysUtils, System.IOUtils,
+  Winapi.Windows, TaskInterface, System.Types;
+
+type
+  TFileSearchTask = class(TInterfacedObject, ITask)
+  private
+    FName: string;
+    FStatus: TTaskStatus;
+    FProgress: TProgressInfo;
+    FResult: TStringList;
+    FCancelRequested: Boolean;
+    FFoundFiles: TStringList;
+    FSearchThread: TThread;
+
+    function GetName: string;
+    function GetStatus: TTaskStatus;
+    function GetProgress: TProgressInfo;
+    function GetResult: string;
+
+    procedure Execute(Params: array of string);
+    procedure Cancel;
+
+    procedure DoSearch(Mask, StartDir: string);
+    procedure UpdateProgress(Current, Total: Integer; const Msg: string);
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+function CreateFileSearchTask: ITask; stdcall;
+
+exports CreateFileSearchTask;
+
+implementation
+
+constructor TFileSearchTask.Create;
+begin
+  inherited;
+  FName := 'Поиск файлов';
+  FStatus := tsReady;
+  FResult := TStringList.Create;
+  FFoundFiles := TStringList.Create;
+end;
+
+destructor TFileSearchTask.Destroy;
+begin
+  if Assigned(FSearchThread) then
+  begin
+    FSearchThread.Terminate;
+    FSearchThread.WaitFor;
+    FSearchThread.Free;
+  end;
+  FResult.Free;
+  FFoundFiles.Free;
+  inherited;
+end;
+
+function TFileSearchTask.GetName: string;
+begin
+  Result := FName;
+end;
+
+function TFileSearchTask.GetStatus: TTaskStatus;
+begin
+  Result := FStatus;
+end;
+
+function TFileSearchTask.GetProgress: TProgressInfo;
+begin
+  Result := FProgress;
+end;
+
+function TFileSearchTask.GetResult: string;
+begin
+  Result := FResult.Text;
+end;
+
+procedure TFileSearchTask.Cancel;
+begin
+  FCancelRequested := True;
+  if Assigned(FSearchThread) then
+    FSearchThread.Terminate;
+end;
+
+procedure TFileSearchTask.UpdateProgress(Current, Total: Integer; const Msg: string);
+begin
+  FProgress.Current := Current;
+  FProgress.Total := Total;
+  FProgress.Message := Msg;
+end;
+
+procedure TFileSearchTask.DoSearch(Mask, StartDir: string);
+var
+  Files: TStringDynArray;
+  I: Integer;
+begin
+  try
+    FStatus := tsRunning;
+    FFoundFiles.Clear;
+    FResult.Clear;
+
+    // Поиск файлов рекурсивно
+    Files := TDirectory.GetFiles(StartDir, Mask, TSearchOption.soAllDirectories);
+
+    for I := 0 to High(Files) do
+    begin
+      if FCancelRequested or (Assigned(FSearchThread) and FSearchThread.CheckTerminated) then
+      begin
+        FStatus := tsCanceled;
+        FResult.Add('Поиск отменен пользователем');
+        Exit;
+      end;
+
+      FFoundFiles.Add(Files[I]);
+      UpdateProgress(I+1, Length(Files), 'Обработка файлов...');
+
+      // Имитация долгой обработки
+      Sleep(10);
+    end;
+
+    FResult.Add(Format('Найдено файлов: %d', [FFoundFiles.Count]));
+    FResult.Add('-----');
+    FResult.AddStrings(FFoundFiles);
+    FStatus := tsCompleted;
+  except
+    on E: Exception do
+    begin
+      FStatus := tsError;
+      FResult.Add('Ошибка: ' + E.Message);
+    end;
+  end;
+end;
+
+procedure TFileSearchTask.Execute(Params: array of string);
+var str1, str2: String;
+  Pars: array of string;
+begin
+  if Length(Params) < 2 then
+    raise Exception.Create('Необходимо указать маску и начальную папку');
+
+  FCancelRequested := False;
+
+  Str1 := Params[0];
+  str2 := Params[1];
+
+//  Pars := Params;
+
+  // Запуск в отдельном потоке
+  FSearchThread := TThread.CreateAnonymousThread(
+    procedure
+    begin
+      DoSearch(Params[0], Str2);
+    end
+  );
+  FSearchThread.Start;
+end;
+
+function CreateFileSearchTask: ITask;
+begin
+  Result := TFileSearchTask.Create;
+end;
+
+end.

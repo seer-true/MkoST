@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.714,D:\DevelopXE\MKOS\DLL1.dproj=D:\Insures\Project1.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.900,=D:\Insures\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.272,=D:\Insures\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.479,=D:\DevelopXE\MKOS\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.938,D:\DevelopXE\MKOS\Unit1.pas=D:\DevelopXE\MKOS\FileSearchImpl.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.854,=D:\DevelopXE\MKOS\TaskInterface.pas</Transaction>
+  </Transactions>
+</BorlandProject>

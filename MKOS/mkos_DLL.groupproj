@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{9371E0FD-B118-49BC-A182-FBC21A7B3DF5}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="mkos.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DLL1.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="mkos">
+        <MSBuild Projects="mkos.dproj"/>
+    </Target>
+    <Target Name="mkos:Clean">
+        <MSBuild Projects="mkos.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="mkos:Make">
+        <MSBuild Projects="mkos.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DLL1">
+        <MSBuild Projects="DLL1.dproj"/>
+    </Target>
+    <Target Name="DLL1:Clean">
+        <MSBuild Projects="DLL1.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DLL1:Make">
+        <MSBuild Projects="DLL1.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="mkos;DLL1"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="mkos:Clean;DLL1:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="mkos:Make;DLL1:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

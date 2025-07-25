@@ -1,0 +1,84 @@
+object MainFrm: TMainFrm
+  Left = 0
+  Top = 0
+  Caption = 'MainFrm'
+  ClientHeight = 441
+  ClientWidth = 624
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  PixelsPerInch = 96
+  TextHeight = 15
+  object Panel1: TPanel
+    Left = 8
+    Top = 8
+    Width = 343
+    Height = 198
+    Caption = #1057#1087#1080#1089#1086#1082' DLL'
+    TabOrder = 0
+  end
+  object Panel2: TPanel
+    Left = 384
+    Top = 8
+    Width = 185
+    Height = 203
+    Caption = #1057#1087#1080#1089#1086#1082' '#1079#1072#1076#1072#1095
+    TabOrder = 1
+    object lbTasks: TListBox
+      Left = 29
+      Top = 14
+      Width = 121
+      Height = 97
+      ItemHeight = 15
+      TabOrder = 0
+    end
+  end
+  object Panel3: TPanel
+    Left = 0
+    Top = 230
+    Width = 624
+    Height = 211
+    Align = alBottom
+    Caption = #1042#1099#1087#1086#1088#1083#1085#1077#1085#1080#1077' '#1079#1072#1076#1072#1095
+    TabOrder = 2
+    object lblProgress: TLabel
+      Left = 193
+      Top = 7
+      Width = 58
+      Height = 15
+      Caption = 'lblProgress'
+    end
+    object lvTasks: TListView
+      Left = 20
+      Top = 6
+      Width = 136
+      Height = 150
+      Columns = <>
+      TabOrder = 0
+    end
+    object ProgressBar: TProgressBar
+      Left = 1
+      Top = 193
+      Width = 622
+      Height = 17
+      Align = alBottom
+      TabOrder = 1
+    end
+  end
+  object FileOpenDialog1: TFileOpenDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = []
+    Left = 460
+    Top = 320
+  end
+  object Timer: TTimer
+    Left = 545
+    Top = 325
+  end
+end
