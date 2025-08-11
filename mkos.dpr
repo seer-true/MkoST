@@ -1,15 +1,19 @@
 program mkos;
+
 uses
   Vcl.Forms,
-  MainFrm in 'MainFrm.pas' {frmMain},
-  DllExportsViewer in 'DllExportsViewer.pas',
-  FileSearchUtils in 'FileSearchUtils.pas',
-  AsyncShellCommand in 'AsyncShellCommand.pas';
+  MainForm in 'MainForm.pas' {frmMain},
+  CommonMkos in 'CommonMkos.pas',
+  TasksFunc in 'TasksFunc.pas';
 
 {$R *.res}
+
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+{$IFDEF DEBUG}
+//  ReportMemoryLeaksOnShutdown := true; // отслеживание утечек памяти
+{$ENDIF}
   Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
 end.
