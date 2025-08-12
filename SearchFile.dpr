@@ -11,12 +11,7 @@ uses
   System.StrUtils,
   System.IOUtils,
   System.Types,
-  ActiveX,
   CommonMkos in 'CommonMkos.pas';
-
-//System.Math,
-//System.AnsiStrings
-//System.SysUtils
 
 {$R *.res}
 
@@ -37,7 +32,6 @@ var
   MaskArray: TArray<string>;
   Mask: string;
   FoundFiles: TStringDynArray;
-  bs: TBSTR;
 begin
   Result := False;
   FileCount := 0;
@@ -68,8 +62,8 @@ var
   PatternsArray: TArray<string>;
   FileStream: TFileStream;
   Buffer: TBytes;
-  FileSize, BytesRead, PatternLength: Integer;
-  I, j, k: Integer;
+  FileSize, BytesRead, PatternLength: Int64;
+  i, j, k: Integer;
   Matches: array of TSearchResult;
   PatternBytesArray: array of TBytes;
   FilePos: Int64;
@@ -81,63 +75,56 @@ begin
   Results := nil;
 
   try
-    //Разделяем шаблоны по '|'
-//SafeSplit(Patterns, '|', PatternsArray);
+//Разделяем шаблоны по ';'
     PatternsArray := string(Patterns).Split([';'], TStringSplitOptions.ExcludeEmpty);
 
-    //Инициализация структур результатов и подготовка байтовых представлений шаблонов
+//Инициализация структур результатов и подготовка байтовых представлений шаблонов
     SetLength(Matches, Length(PatternsArray));
     SetLength(PatternBytesArray, Length(PatternsArray));
 
-    for I := 0 to High(PatternsArray) do
+    for i := 0 to High(PatternsArray) do
     begin
-      PatternsArray[I] := PatternsArray[I].Trim;
-      Matches[I].Pattern := PatternsArray[I];
-      PatternBytesArray[I] := TEncoding.UTF8.GetBytes(PatternsArray[I]);
-      SetLength(Matches[I].Positions, 0);
+      PatternsArray[i] := PatternsArray[i].Trim;
+      Matches[i].Pattern := PatternsArray[i];
+      PatternBytesArray[i] := TEncoding.UTF8.GetBytes(PatternsArray[i]);
+      SetLength(Matches[i].Positions, 0);
     end;
 
-    //Открываем файл для чтения
+//Открываем файл для чтения
     FileStream := TFileStream.Create(string(FileName), fmOpenRead or fmShareDenyWrite);
     try
       FileSize := FileStream.Size;
       SetLength(Buffer, 1024 * 1024); //Буфер 1MB
       FilePos := 0;
-
-      //Читаем файл блоками
+//Читаем файл блоками
       while FilePos < FileSize do
       begin
         BytesRead := FileStream.Read(Buffer[0], Length(Buffer));
         if BytesRead = 0 then
           Break;
-
-        //Поиск для каждого шаблона
-        for I := 0 to High(PatternsArray) do
+//Поиск для каждого шаблона
+        for i := 0 to High(PatternsArray) do
         begin
-          PatternLength := Length(PatternBytesArray[I]);
+          PatternLength := Length(PatternBytesArray[i]);
           if PatternLength = 0 then
             Continue;
           if BytesRead < PatternLength then
             Continue;
-
           j := 0;
-          while j <= BytesRead - PatternLength do
-          begin
-            //Быстрая проверка первого байта
-            if Buffer[j] = PatternBytesArray[I][0] then
+          while j <= BytesRead - PatternLength do begin
+//Быстрая проверка первого байта
+            if Buffer[j] = PatternBytesArray[i][0] then
             begin
               //Проверка остальных байтов
               k := 1;
-              while (k < PatternLength) and (Buffer[j + k] = PatternBytesArray[I][k]) do
+              while (k < PatternLength) and (Buffer[j + k] = PatternBytesArray[i][k]) do
                 Inc(k);
-
-              if k = PatternLength then
-              begin
-                //Найдено совпадение
-                SetLength(Matches[I].Positions, Length(Matches[I].Positions) + 1);
-                Matches[I].Positions[High(Matches[I].Positions)] := FilePos + j;
+              if k = PatternLength then begin
+//Найдено совпадение
+                SetLength(Matches[i].Positions, Length(Matches[i].Positions) + 1);
+                Matches[i].Positions[High(Matches[i].Positions)] := FilePos + j;
                 Inc(TotalMatches);
-                //Пропускаем длину шаблона для неперекрывающихся совпадений
+//Пропускаем длину шаблона для неперекрывающихся совпадений
                 Inc(j, PatternLength);
                 Continue;
               end;
@@ -150,24 +137,20 @@ begin
     finally
       FileStream.Free;
     end;
-
-    //Формируем результаты в виде строки
+//Формируем результаты в виде строки
     ResultStr := '';
-    for I := 0 to High(Matches) do
+    for i := 0 to High(Matches) do
     begin
-      //Добавляем информацию о шаблоне и количестве совпадений
-
-      ResultStr := ResultStr + Matches[I].Pattern + ' : найдено ' + IntToStr(Length(Matches[I].Positions)) + ' вхождений' + #13#10;
-
-      //Добавляем позиции совпадений
-      for j := 0 to High(Matches[I].Positions) do
-      begin
-        TempStr := ' Позиция: ' + IntToStr(Matches[I].Positions[j]) + #13#10;
+//Добавляем информацию о шаблоне и количестве совпадений
+      ResultStr := ResultStr + Matches[i].Pattern + ' : найдено ' + IntToStr(Length(Matches[i].Positions)) + ' вхождений' + #13#10;
+//Добавляем позиции совпадений
+      for j := 0 to High(Matches[i].Positions) do begin
+        TempStr := ' Позиция: ' + IntToStr(Matches[i].Positions[j]) + #13#10;
         ResultStr := ResultStr + TempStr;
       end;
     end;
 
-    //Выделяем память и копируем результат
+//копируем результат
     GetMem(Results, Length(ResultStr) + 10);
     StrMove(Results, PChar(ResultStr), Length(ResultStr) + 10);
 

@@ -18,7 +18,7 @@ type
     procedure AddResult();
     procedure UpdateTasksList();
   public
-    TaskIdx: Integer;  // индекс задачи в FTasks
+    TaskIdx: Integer; // индекс задачи в FTasks
 
     constructor Create(ACreateSuspended: Boolean);
     destructor Destroy; override;
@@ -26,7 +26,7 @@ type
     procedure Stop;
   end;
 
-  TThFindFiles = class(TBaseThread)  // поиск файлов
+  TThFindFiles = class(TBaseThread) // поиск файлов
   protected
     procedure Execute; override;
   public
@@ -37,7 +37,7 @@ type
   protected
     procedure Execute; override;
   public
-    TargetFile, Masks: String;
+    TargetFile, Patterns: String;
   end;
 
 implementation
@@ -61,13 +61,13 @@ end;
 
 procedure TBaseThread.LoadFunc(hDll: THandle; NameFunc: string);
 begin
-//ищем функцию из DLL
+  // ищем функцию из DLL
   if hDll = 0 then
     raise Exception.Create('Для функции "' + NameFunc + '" Dll не загружена.');
   if NameFunc.IsEmpty then
     raise Exception.Create('Имя функции не определено (пусто)');
 
-  FAddrFunc := GetProcAddress(hDLL, PChar(NameFunc));
+  FAddrFunc := GetProcAddress(hDll, PChar(NameFunc));
   if not Assigned(FAddrFunc) then
     raise Exception.Create('Функция "' + NameFunc + '" не найдена в DLL');
 end;
@@ -90,7 +90,8 @@ end;
 
 procedure TBaseThread.Stop;
 begin
-  if not Terminated then begin
+  if not Terminated then
+  begin
     FAddMess := 'Попытка остановить задачу..';
     Synchronize(AddResult);
     Terminate;
@@ -121,18 +122,24 @@ begin
   SearchFunc := FAddrFunc;
 
   FileList := '';
-  MaskArray := string(Masks).Split([';'], TStringSplitOptions.ExcludeEmpty);
+  MaskArray := Masks.Split([';'], TStringSplitOptions.ExcludeEmpty);
 
-  for Mask in MaskArray do begin //для каждой маски
-    if not Terminated then begin
-      Res := SearchFunc(PChar(Mask), PChar(StartFolder), FileCount, FileList); //вызов
-      if Res then begin
-        FAddMess := Format('Найдено %d файлов %s:%s%s%s', [FileCount, Mask, sLineBreak, FileList, sLineBreak]);
+  for Mask in MaskArray do
+  begin // для каждой маски
+    if not Terminated then
+    begin
+      Res := SearchFunc(PChar(Mask), PChar(StartFolder), FileCount, FileList);
+      // вызов
+      if Res then
+      begin
+        FAddMess := Format('Найдено %d файлов %s:%s%s%s',
+          [FileCount, Mask, sLineBreak, FileList, sLineBreak]);
         Synchronize(AddResult);
       end;
-//      FTerminateEvent.WaitFor(5000);
+      // FTerminateEvent.WaitFor(5000);
     end
-    else begin
+    else
+    begin
       FAddMess := 'Задача остановлена пользователем.';
       Synchronize(AddResult);
       FTasks[TaskIdx].Status := tsCancelled;
@@ -149,9 +156,31 @@ end;
 { TThFindInFile }
 
 procedure TThFindInFile.Execute;
+var
+  SearchFunc: TSearchInFileFunc;
+  PatternsArray: TArray<string>;
+  Pattern: String;
+  Res: Boolean;
+  Results: PChar;
+  TotalMatches: Int64;
 begin
   inherited;
+  FTasks[TaskIdx].Status := tsRunning;
 
+  SearchFunc := FAddrFunc;
+  PatternsArray := Patterns.Split([';'], TStringSplitOptions.ExcludeEmpty);
+  for Pattern in PatternsArray do
+  begin
+    if not Terminated then
+    begin
+      Res := SearchFunc(PChar(TargetFile), PChar(Pattern), Results, TotalMatches); // вызов
+      if Res then begin
+        FAddMess := '111111'; (*Format('Найдено %d вхождений %s:%s%s%s',
+          [TotalMatches, Mask, sLineBreak, FileList, sLineBreak]);*)
+        Synchronize(AddResult);
+      end;
+    end;
+  end;
 end;
 
 end.

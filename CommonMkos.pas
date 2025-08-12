@@ -14,7 +14,7 @@ type
   ///</summary>
   TSearchFilesFunc = function(Masks: PChar; StartDir: PChar; out FileCount: Integer; var FileList: WideString (* PChar *)(* PStringArray *) )
     : Boolean; stdcall;
-  TSearchInFileFunc = function(FileName: PChar; Patterns: PChar; out Results: PChar; out TotalMatches: Integer): Boolean stdcall;
+  TSearchInFileFunc = function(FileName: PChar; Patterns: PChar; out Results: PChar; out TotalMatches: Int64): Boolean stdcall;
   TArchiveFolderFunc = function(FolderPath, ArchiveName: PChar; Callback: Pointer): Boolean; stdcall;
 
   TLogCallback = procedure(Msg: PChar) of object; stdcall;

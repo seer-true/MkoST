@@ -341,7 +341,7 @@ begin
     procedure
     var
       FileName, Patterns, Results: PChar;
-      TotalMatches: Integer;
+      TotalMatches: Int64;
       SearchFunc: TSearchInFileFunc;
       TaskIdx: Integer;
       Res: Boolean;
@@ -490,7 +490,7 @@ begin
         ThFindInFile := TThFindInFile.Create(True); //создаем поток
 
         ThFindInFile.TargetFile := eStartFolder.Text;
-        ThFindInFile.Masks := eMasks.Text;
+        ThFindInFile.Patterns := eSearchPatterns.Text;
 
         ThFindInFile.FreeOnTerminate := True;
 
