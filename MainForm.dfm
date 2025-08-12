@@ -2,7 +2,7 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'MKOS - '#1052#1086#1076#1091#1083#1100#1085#1086#1077' '#1087#1088#1080#1083#1086#1078#1077#1085#1080#1077
-  ClientHeight = 563
+  ClientHeight = 624
   ClientWidth = 600
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -11,27 +11,25 @@ object frmMain: TfrmMain
   Font.Name = 'Tahoma'
   Font.Style = []
   OnCreate = FormCreate
+  PixelsPerInch = 96
   TextHeight = 13
   object mResults: TMemo
     Left = 0
-    Top = 329
+    Top = 346
     Width = 600
-    Height = 193
+    Height = 237
     Align = alClient
     ScrollBars = ssBoth
     TabOrder = 0
-    ExplicitWidth = 596
-    ExplicitHeight = 192
+    ExplicitLeft = -1
   end
   object pLower: TPanel
     Left = 0
-    Top = 522
+    Top = 583
     Width = 600
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 521
-    ExplicitWidth = 596
     object btnCancelTask: TButton
       Left = 333
       Top = 6
@@ -46,7 +44,7 @@ object frmMain: TfrmMain
       Top = 6
       Width = 120
       Height = 25
-      Caption = #1055#1088#1086#1089#1084#1086#1090#1088' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074
+      Caption = #1054#1095#1080#1089#1090#1080#1090#1100
       TabOrder = 1
       OnClick = btnViewResultsClick
     end
@@ -58,7 +56,6 @@ object frmMain: TfrmMain
     Height = 191
     Align = alTop
     TabOrder = 2
-    ExplicitWidth = 596
     object lblMasks: TLabel
       Left = 8
       Top = 39
@@ -82,7 +79,7 @@ object frmMain: TfrmMain
       TabOrder = 0
       OnClick = btnSelectFolderClick
     end
-    object edtStartFolder: TEdit
+    object eStartFolder: TEdit
       Left = 8
       Top = 12
       Width = 584
@@ -108,7 +105,7 @@ object frmMain: TfrmMain
       Text = '*.dpr;*.txt;*.pas;*.dfm'
     end
     object eSearchPatterns: TEdit
-      Left = 8
+      Left = 9
       Top = 131
       Width = 584
       Height = 21
@@ -127,7 +124,7 @@ object frmMain: TfrmMain
     end
     object btnSearchInFile: TButton
       Left = 134
-      Top = 158
+      Top = 160
       Width = 120
       Height = 25
       Caption = #1055#1086#1080#1089#1082' '#1074' '#1092#1072#1081#1083#1077
@@ -148,15 +145,16 @@ object frmMain: TfrmMain
     Left = 0
     Top = 191
     Width = 600
-    Height = 138
+    Height = 155
     Align = alTop
     TabOrder = 3
-    ExplicitWidth = 596
+    ExplicitLeft = 35
+    ExplicitTop = 197
     object lvTasks: TListView
       Left = 1
       Top = 1
       Width = 598
-      Height = 96
+      Height = 115
       Align = alTop
       Columns = <
         item
@@ -182,25 +180,25 @@ object frmMain: TfrmMain
       RowSelect = True
       TabOrder = 0
       ViewStyle = vsReport
-      ExplicitWidth = 594
+      OnDblClick = lvTasksDblClick
     end
-    object b1: TButton
+    object bStartTask: TButton
       Left = 9
-      Top = 103
-      Width = 75
+      Top = 122
+      Width = 119
       Height = 25
       Caption = #1047#1072#1087#1091#1089#1082
       TabOrder = 1
-      OnClick = b1Click
+      OnClick = bStartTaskClick
     end
-    object b2: TButton
-      Left = 90
-      Top = 103
-      Width = 75
+    object bStopTask: TButton
+      Left = 134
+      Top = 122
+      Width = 120
       Height = 25
       Caption = #1057#1090#1086#1087
       TabOrder = 2
-      OnClick = b2Click
+      OnClick = bStopTaskClick
     end
   end
   object OpenDialog: TFileOpenDialog
@@ -215,7 +213,7 @@ object frmMain: TfrmMain
     Top = 8
   end
   object FileOpenDialog: TOpenTextFileDialog
-    Left = 475
-    Top = 395
+    Left = 355
+    Top = 100
   end
 end

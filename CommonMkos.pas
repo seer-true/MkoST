@@ -48,13 +48,14 @@ type
 procedure ShowDllExports(const hDll: THandle; OutputList: TStringList);
 
 const
-  RealTasks: array[0..1] of string = ('SearchInFile', 'SearchFiles');
+  RealTasks: array[0..2] of string = ('SearchFiles', 'SearchInFile', 'ArchiveFolder');
 
 var
   FSearchDLL: THandle;
-  FSevenZipDLL: THandle;
+  F7ZipDLL: THandle;
+
   FCancelled: Boolean;
-  FTasks: TArray<TTaskInfo>;
+  FTasks: TArray<TTaskInfo>; // массив задач
 
 implementation
 
