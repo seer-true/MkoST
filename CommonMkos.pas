@@ -9,17 +9,27 @@ uses
   TasksFunc;
 
 type
+
+  TSearchResult = record
+    Pattern: string;
+    Positions: TArray<Int64>;
+  end;
+
+//  PSearchResults = ^TSearchResults;
+  TSearchResults = array of TSearchResult;
+
   ///<summary>
   ///Тип функции поска файлов в DLL
   ///</summary>
-  TSearchFilesFunc = function(Masks: PChar; StartDir: PChar; out FileCount: Integer; var FileList: WideString (* PChar *)(* PStringArray *) )
-    : Boolean; stdcall;
+  TSearchFilesFunc = function(Masks: PChar; StartDir: PChar; var FileCount: Integer; var FileList: WideString): Boolean; stdcall;
+
   TSearchInFileFunc = function(FileName: PChar; Patterns: PChar; out Results: PChar; out TotalMatches: Int64): Boolean stdcall;
+
   TArchiveFolderFunc = function(FolderPath, ArchiveName: PChar; Callback: Pointer): Boolean; stdcall;
 
+  TSearchPattern = function(FileName: PChar; Pattern: PChar; var Results: TArray<Int64>; var TotalMatches: Int64): Boolean; stdcall;
+
   TLogCallback = procedure(Msg: PChar) of object; stdcall;
-(* PStringArray = ^TStringArray;
-  TStringArray = array of string; *)
 
   ///<summary>
   ///Статус задачи
@@ -48,7 +58,7 @@ type
 procedure ShowDllExports(const hDll: THandle; OutputList: TStringList);
 
 const
-  RealTasks: array[0..2] of string = ('SearchFiles', 'SearchInFile', 'ArchiveFolder');
+  RealTasks: array[0..2] of string = ('SearchFiles', 'SearchPattern', 'ArchiveFolder');
 
 var
   FSearchDLL: THandle;
@@ -66,7 +76,7 @@ var
   pName: PAnsiChar;
   i: Cardinal; //Integer;
   ExportName: string;
-  ExportOrdinal: Word;
+//  ExportOrdinal: Word;
   DllBase: Pointer;
   DosHeader: PImageDosHeader;
   NTHeader: PImageNtHeaders;
@@ -97,7 +107,7 @@ begin
     begin
       pName := PAnsiChar(PByte(DllBase) + pNameRVAs^);
       ExportName := string(pName);
-      ExportOrdinal := pExportDir^.Base + i;
+//      ExportOrdinal := pExportDir^.Base + i;
       OutputList.Add(ExportName);
       Inc(pNameRVAs);
     end;

@@ -3,22 +3,36 @@ unit TasksFunc;
 interface
 
 uses
-  System.Classes, System.SyncObjs, System.SysUtils,
-  Winapi.Windows, Winapi.Messages;
+  System.Classes,
+  System.SyncObjs,
+  System.SysUtils,
+  System.StrUtils,
+  Winapi.Windows,
+  Winapi.Messages;
 
 type
+  TStringEvent = procedure(const S: string) of object;
+  TStatusTask = procedure(const TaskIdx: Integer = -1) of object;
+
+  ///<summary>
+  ///Базовый класс для вызова потоков
+  ///</summary>
   TBaseThread = class(TThread)
   private
     FTerminateEvent: TEvent;
+    FNameFunc: string;
     FAddMess: string;
 
     FAddrFunc: Pointer;
   protected
     procedure TerminatedSet; override;
     procedure AddResult();
-    procedure UpdateTasksList();
+//    procedure UpdateTasksList();
+
   public
-    TaskIdx: Integer; // индекс задачи в FTasks
+    OnStringReceived: TStringEvent;
+    OnStatusTask: TStatusTask;
+    TaskIdx: Integer; //индекс задачи в FTasks
 
     constructor Create(ACreateSuspended: Boolean);
     destructor Destroy; override;
@@ -26,14 +40,21 @@ type
     procedure Stop;
   end;
 
-  TThFindFiles = class(TBaseThread) // поиск файлов
+  TThFindFiles = class(TBaseThread)//поиск файлов
   protected
     procedure Execute; override;
   public
     StartFolder, Masks: String;
   end;
 
-  TThFindInFile = class(TBaseThread) // поиск в файле
+  TThSearchPattern = class(TBaseThread)//поиск в файле ПРАВИЛЬНЫЙ
+  protected
+    procedure Execute; override;
+  public
+    TargetFile, Patterns: String;
+  end;
+
+  TThFindInFile = class(TBaseThread)//поиск в файле
   protected
     procedure Execute; override;
   public
@@ -43,7 +64,7 @@ type
 implementation
 
 uses
-  MainForm, CommonMkos;
+  CommonMkos;
 
 { TBaseThread }
 
@@ -51,6 +72,9 @@ constructor TBaseThread.Create(ACreateSuspended: Boolean);
 begin
   inherited Create(ACreateSuspended);
   FTerminateEvent := TEvent.Create(nil, True, False, '');
+  FNameFunc := '';
+  FAddMess := '';
+  FAddrFunc := nil;
 end;
 
 destructor TBaseThread.Destroy;
@@ -61,30 +85,30 @@ end;
 
 procedure TBaseThread.LoadFunc(hDll: THandle; NameFunc: string);
 begin
-  // ищем функцию из DLL
+  //ищем функцию из DLL
   if hDll = 0 then
     raise Exception.Create('Для функции "' + NameFunc + '" Dll не загружена.');
   if NameFunc.IsEmpty then
     raise Exception.Create('Имя функции не определено (пусто)');
 
   FAddrFunc := GetProcAddress(hDll, PChar(NameFunc));
-  if not Assigned(FAddrFunc) then
+  if Assigned(FAddrFunc) then
+    FNameFunc := NameFunc
+  else
     raise Exception.Create('Функция "' + NameFunc + '" не найдена в DLL');
 end;
 
 procedure TBaseThread.AddResult;
 begin
-  frmMain.mResults.Lines.Add(FAddMess);
-  frmMain.mResults.Perform(EM_LINESCROLL, 0, frmMain.mResults.Lines.Count);
-  frmMain.UpdateTasksList;
-end;
-
-procedure TBaseThread.UpdateTasksList();
-begin
-  Synchronize(nil,
+  Synchronize(
     procedure
+    var
+      str: string;
     begin
-      frmMain.UpdateTasksList;
+      str := FAddMess;
+//frmMain.mResults.Lines.Add(FAddMess);
+//frmMain.mResults.Perform(EM_LINESCROLL, 0, frmMain.mResults.Lines.Count);
+//frmMain.UpdateTasksList;
     end);
 end;
 
@@ -93,7 +117,7 @@ begin
   if not Terminated then
   begin
     FAddMess := 'Попытка остановить задачу..';
-    Synchronize(AddResult);
+    AddResult;
     Terminate;
     FTerminateEvent.SetEvent;
   end;
@@ -125,24 +149,38 @@ begin
   MaskArray := Masks.Split([';'], TStringSplitOptions.ExcludeEmpty);
 
   for Mask in MaskArray do
-  begin // для каждой маски
+  begin //для каждой маски
     if not Terminated then
     begin
       Res := SearchFunc(PChar(Mask), PChar(StartFolder), FileCount, FileList);
-      // вызов
+      //вызов
       if Res then
       begin
-        FAddMess := Format('Найдено %d файлов %s:%s%s%s',
-          [FileCount, Mask, sLineBreak, FileList, sLineBreak]);
-        Synchronize(AddResult);
+
+        FAddMess := Format('Найдено %d файлов %s:%s%s%s', [FileCount, Mask, sLineBreak, FileList, sLineBreak]);
+        if Assigned(OnStringReceived) then
+          Synchronize(
+            procedure
+            begin
+              OnStringReceived(FAddMess);
+            end);
+
+//AddResult;
       end;
-      // FTerminateEvent.WaitFor(5000);
+      //FTerminateEvent.WaitFor(5000);
     end
     else
     begin
-      FAddMess := 'Задача остановлена пользователем.';
-      Synchronize(AddResult);
       FTasks[TaskIdx].Status := tsCancelled;
+      FAddMess := 'Задача остановлена пользователем.';
+      if Assigned(OnStringReceived) then
+        Synchronize(
+          procedure
+          begin
+            OnStringReceived(FAddMess);
+          end);
+//      AddResult;
+
       break;
     end;
   end;
@@ -150,7 +188,60 @@ begin
     FTasks[TaskIdx].Status := tsCompleted;
 
   Terminate;
-  UpdateTasksList;
+  OnStatusTask;
+//  UpdateTasksList;
+end;
+
+{ TThSearchPattern }
+
+procedure TThSearchPattern.Execute;
+var
+  SearchPattern: TSearchPattern;
+  PatternsArray: TArray<string>;
+  Res: Boolean;
+  Results: TArray<Int64>;
+  TotalMatches: Int64;
+  Pattern: string;
+begin
+  inherited;
+  FTasks[TaskIdx].Status := tsRunning;
+
+  SearchPattern := FAddrFunc;
+  try
+    PatternsArray := Patterns.Split([';'], TStringSplitOptions.ExcludeEmpty);
+    for Pattern in PatternsArray do begin
+      TotalMatches := 10;
+      if not Terminated then begin
+        Res := SearchPattern(PChar(TargetFile), PChar(Pattern), Results, TotalMatches);
+        if Res then begin
+          FAddMess := Format('Найдено %s%d вхождений %s' + sLineBreak, [IfThen(TotalMatches < Length(Results), 'более ', ''), Length(Results),
+            Pattern]);
+          Synchronize(AddResult);
+          FAddMess := '';
+          for var j := 0 to Length(Results) - 1 do
+            FAddMess := FAddMess + IntToStr(Results[j]) + sLineBreak;
+          Synchronize(AddResult);
+        end;
+      end
+      else
+      begin
+        FAddMess := 'Задача остановлена пользователем.';
+        Synchronize(AddResult);
+        FTasks[TaskIdx].Status := tsCancelled;
+        break;
+      end;
+
+    end;
+  finally
+    SetLength(Results, 0);
+  end;
+
+  if not Terminated then
+    FTasks[TaskIdx].Status := tsCompleted;
+
+  Terminate;
+  OnStatusTask;
+//  UpdateTasksList;
 end;
 
 { TThFindInFile }
@@ -173,10 +264,10 @@ begin
   begin
     if not Terminated then
     begin
-      Res := SearchFunc(PChar(TargetFile), PChar(Pattern), Results, TotalMatches); // вызов
+      Res := SearchFunc(PChar(TargetFile), PChar(Pattern), Results, TotalMatches); //вызов
       if Res then begin
-        FAddMess := '111111'; (*Format('Найдено %d вхождений %s:%s%s%s',
-          [TotalMatches, Mask, sLineBreak, FileList, sLineBreak]);*)
+        FAddMess := '111111'; (* Format('Найдено %d вхождений %s:%s%s%s',
+          [TotalMatches, Mask, sLineBreak, FileList, sLineBreak]); *)
         Synchronize(AddResult);
       end;
     end;

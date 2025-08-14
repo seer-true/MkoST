@@ -17,7 +17,7 @@ uses
   System.IOUtils,
   System.StrUtils,
   CommonMkos,
-  TasksFunc;
+  TasksFunc, Vcl.Grids;
 
 type
   TfrmMain = class(TForm)
@@ -29,7 +29,7 @@ type
     pSearchFiles: TPanel;
     lblMasks: TLabel;
     btnSelectFolder: TButton;
-    eStartFolder: TEdit;
+    eFile_s: TEdit;
     btnSearchFiles: TButton;
     eMasks: TEdit;
     eSearchPatterns: TEdit;
@@ -51,11 +51,15 @@ type
     procedure bStopTaskClick(Sender: TObject);
     procedure lvTasksDblClick(Sender: TObject);
   private
-    FNextTaskID: Integer;
+//    FNextTaskID: Integer;
     //FTasks: TArray<TTaskInfo>;
     //FCancelled: Boolean;
     ThFindFiles: TThFindFiles;
-    ThFindInFile: TThFindInFile;
+    ThSearchPattern: TThSearchPattern;
+//    ThFindInFile: TThFindInFile;
+
+    procedure StringReceived(const S: string);
+    procedure StatusTask(const TaskIdx: Integer = -1);
 
     procedure LoadSevenZipDLL;
     procedure UnloadSevenZipDLL;
@@ -66,7 +70,6 @@ type
       F7ZipDLL: THandle; *)
     destructor Destroy; override;
     procedure StartArchiveTask;
-    procedure UpdateTasksList;
     procedure AddResult(const Text: string);
   end;
 
@@ -76,7 +79,8 @@ var
 implementation
 
 uses
-  System.Threading, System.SyncObjs;
+  System.Threading,
+  System.SyncObjs;
 {$R *.dfm}
 
 procedure FileProgressCallback(Msg: PChar); stdcall;
@@ -102,17 +106,16 @@ var
   ListTasks: TStringList;
   TaskInfo: TTaskInfo;
 begin
-  FNextTaskID := 1;
   LoadSearchDLL;
   LoadSevenZipDLL;
   ListTasks := TStringList.Create;
   try
+  // полисковая DLL
     ShowDllExports(FSearchDLL, ListTasks);
-    for var i := Low(RealTasks) to High(RealTasks) do begin
+    for var i := 0 to Length(RealTasks) - 1 do begin
       if ListTasks.IndexOf(RealTasks[i]) >= 0 then begin
         //задача
-        TaskInfo.ID := FNextTaskID;
-        Inc(FNextTaskID);
+        TaskInfo.ID := i;
         TaskInfo.Name := RealTasks[i];
         TaskInfo.Status := tsWaiting;
         TaskInfo.StartTime := 0;
@@ -122,12 +125,12 @@ begin
       end;
     end;
     ListTasks.Clear;
+// архивирующая DLL
     ShowDllExports(F7ZipDLL, ListTasks);
     for var i := Low(RealTasks) to High(RealTasks) do begin
       if ListTasks.IndexOf(RealTasks[i]) >= 0 then begin
         //задача
-        TaskInfo.ID := FNextTaskID;
-        Inc(FNextTaskID);
+        TaskInfo.ID := i;
         TaskInfo.Name := RealTasks[i];
         TaskInfo.Status := tsWaiting;
         TaskInfo.StartTime := 0;
@@ -136,7 +139,8 @@ begin
         FTasks[High(FTasks)] := TaskInfo;
       end;
     end;
-    UpdateTasksList;
+  StatusTask;
+//      UpdateTasksList;
   finally
     ListTasks.Free;
   end;
@@ -146,7 +150,6 @@ destructor TfrmMain.Destroy;
 begin
   UnloadSearchDLL;
   UnloadSevenZipDLL;
-  inherited;
 end;
 
 procedure TfrmMain.LoadSearchDLL;
@@ -178,13 +181,13 @@ end;
 procedure TfrmMain.btnSelectFileClick(Sender: TObject);
 begin
   if FileOpenDialog.Execute then
-    eStartFolder.Text := FileOpenDialog.FileName;
+    eFile_s.Text := FileOpenDialog.FileName;
 end;
 
 procedure TfrmMain.btnSelectFolderClick(Sender: TObject);
 begin
   if OpenDialog.Execute then
-    eStartFolder.Text := OpenDialog.FileName;
+    eFile_s.Text := OpenDialog.FileName;
 end;
 
 procedure TfrmMain.btnSearchFilesClick(Sender: TObject);
@@ -192,7 +195,7 @@ var
   TaskInfo: TTaskInfo;
   Thread: TThread;
 begin
-  if Trim(eStartFolder.Text) = '' then
+  if Trim(eFile_s.Text) = '' then
   begin
     ShowMessage('Укажите стартовую папку');
     Exit;
@@ -205,19 +208,19 @@ begin
   FCancelled := False;
   mResults.Clear;
   AddResult('=== Начало поиска ===');
-  AddResult(Format('Папка: %s', [eStartFolder.Text]));
+  AddResult(Format('Папка: %s', [eFile_s.Text]));
   AddResult(Format('Маски: %s', [eMasks.Text]));
   AddResult('---------------------');
   //задача
-  TaskInfo.ID := FNextTaskID;
-  Inc(FNextTaskID);
+
   TaskInfo.Name := 'Поиск файлов';
   TaskInfo.Status := tsWaiting;
   TaskInfo.StartTime := Now;
   TaskInfo.EndTime := 0;
   SetLength(FTasks, Length(FTasks) + 1);
   FTasks[High(FTasks)] := TaskInfo;
-  UpdateTasksList;
+     StatusTask;
+//UpdateTasksList;
   ///
   (* TTask.Run(procedure
     // var
@@ -253,7 +256,8 @@ begin
       TThread.Synchronize(nil,
         procedure
         begin
-          UpdateTasksList;
+          StatusTask;
+//UpdateTasksList;
         end);
       try
         //ищем функцию из DLL
@@ -265,7 +269,7 @@ begin
         MaskArray := string(eMasks.Text).Split([';'], TStringSplitOptions.ExcludeEmpty);
         for Mask in MaskArray do
         begin //для каждой маски
-          Res := SearchFunc(PChar(Mask), PChar(eStartFolder.Text), FileCount, FileList);
+          Res := SearchFunc(PChar(Mask), PChar(eFile_s.Text), FileCount, FileList);
           if Res then
           begin
             AddResult(Format('Найдено файлов: %d', [FileCount]));
@@ -299,7 +303,8 @@ begin
       TThread.Synchronize(nil,
         procedure
         begin
-          UpdateTasksList;
+          StatusTask;
+//UpdateTasksList;
         end);
     end);
   Thread.Start;
@@ -310,7 +315,7 @@ var
   TaskInfo: TTaskInfo;
   Thread: TThread;
 begin
-  if Trim(eStartFolder.Text) = '' then
+  if Trim(eFile_s.Text) = '' then
   begin
     ShowMessage('Укажите файл для поиска');
     Exit;
@@ -323,19 +328,18 @@ begin
   FCancelled := False;
   mResults.Clear;
   AddResult('=== Начало поиска в файле ===');
-  AddResult(Format('Файл: %s', [eStartFolder.Text]));
+  AddResult(Format('Файл: %s', [eFile_s.Text]));
   AddResult(Format('Последовательности: %s', [eSearchPatterns.Text]));
   AddResult('----------------------------');
   //Создаем задачу
-  TaskInfo.ID := FNextTaskID;
-  Inc(FNextTaskID);
   TaskInfo.Name := 'Поиск в файле';
   TaskInfo.Status := tsWaiting;
   TaskInfo.StartTime := Now;
   TaskInfo.EndTime := 0;
   SetLength(FTasks, Length(FTasks) + 1);
   FTasks[High(FTasks)] := TaskInfo;
-  UpdateTasksList;
+  StatusTask;
+//UpdateTasksList;
   //Запускаем в отдельном потоке
   Thread := TThread.CreateAnonymousThread(
     procedure
@@ -351,7 +355,8 @@ begin
       TThread.Synchronize(nil,
         procedure
         begin
-          UpdateTasksList;
+          StatusTask;
+//UpdateTasksList;
         end);
       try
         //Получаем функцию из DLL
@@ -359,10 +364,10 @@ begin
         if not Assigned(SearchFunc) then
           raise Exception.Create('Функция SearchInFile не найдена в DLL');
         //Подготавливаем параметры
-        FileName := StrAlloc(Length(eStartFolder.Text) + 1);
+        FileName := StrAlloc(Length(eFile_s.Text) + 1);
         Patterns := StrAlloc(Length(eSearchPatterns.Text) + 1);
         try
-          StrPCopy(FileName, eStartFolder.Text);
+          StrPCopy(FileName, eFile_s.Text);
           StrPCopy(Patterns, eSearchPatterns.Text);
           //Вызываем функцию поиска
           Res := SearchFunc(FileName, Patterns, Results, TotalMatches);
@@ -405,25 +410,28 @@ begin
       TThread.Synchronize(nil,
         procedure
         begin
-          UpdateTasksList;
+          StatusTask;
+//UpdateTasksList;
         end);
     end);
   Thread.Start;
 end;
 
-procedure TfrmMain.UpdateTasksList;
+procedure TfrmMain.StatusTask(const TaskIdx: Integer = -1);
 var
   i: Integer;
   Item: TListItem;
   StatusText: string;
 begin
+  lvTasks.ItemIndex := TaskIdx;
+
   lvTasks.Items.BeginUpdate;
   try
     lvTasks.Items.Clear;
-    for i := 0 to High(FTasks) do
-    begin
+    for i := 0 to High(FTasks) do begin
       Item := lvTasks.Items.Add;
       Item.Caption := IntToStr(FTasks[i].ID);
+
       Item.SubItems.Add(FTasks[i].Name);
       case FTasks[i].Status of
         tsWaiting:
@@ -461,7 +469,7 @@ begin
         Item.SubItems.Add('');
     end;
   finally
-    lvTasks.ItemIndex := lvTasks.Items.Count - 1;
+//    lvTasks.ItemIndex := lvTasks.Items.Count - 1;
     lvTasks.Items.EndUpdate;
   end;
 end;
@@ -471,40 +479,62 @@ var
   TaskInfo: TTaskInfo;
 begin
   TaskInfo := FTasks[lvTasks.ItemIndex];
+//('SearchFiles', 'SearchPattern', 'SearchInFile', 'ArchiveFolder');
   case IndexStr(TaskInfo.Name, RealTasks) of
     0: begin //поиск файлов
         ThFindFiles := TThFindFiles.Create(True); //создаем поток
-
-        ThFindFiles.StartFolder := eStartFolder.Text;
-        ThFindFiles.Masks := eMasks.Text;
-
-        ThFindFiles.FreeOnTerminate := True;
-
         TaskInfo.FThread := ThFindFiles;
-        ThFindFiles.TaskIdx := lvTasks.ItemIndex;
-        ThFindFiles.LoadFunc(FSearchDLL, TaskInfo.Name);
-        Application.ProcessMessages;
-        ThFindFiles.Start; //запускаем поток
+
+        eFile_s.Text := 'D:\Insures\insures5ase\bin\'; // для тестов
+
+        with ThFindFiles do begin
+          OnStringReceived := StringReceived;
+
+          StartFolder := eFile_s.Text;
+          Masks := eMasks.Text;
+
+          FreeOnTerminate := True;
+
+          TaskIdx := lvTasks.ItemIndex;
+
+          LoadFunc(FSearchDLL, TaskInfo.Name);
+
+          Application.ProcessMessages;
+          Start; //запускаем поток
+        end;
       end;
-    1: begin
-        ThFindInFile := TThFindInFile.Create(True); //создаем поток
+    1: begin //поиск в файле
+        ThSearchPattern := TThSearchPattern.Create(True); //создаем поток
+        TaskInfo.FThread := ThSearchPattern;
 
-        ThFindInFile.TargetFile := eStartFolder.Text;
-        ThFindInFile.Patterns := eSearchPatterns.Text;
+        eFile_s.Text := 'D:\Insures\insures5ase\bin\iRefBooks.rsm'; // для тестов
 
-        ThFindInFile.FreeOnTerminate := True;
+        with ThSearchPattern do begin
+          OnStringReceived := StringReceived;
 
-        TaskInfo.FThread := ThFindInFile;
-        ThFindInFile.TaskIdx := lvTasks.ItemIndex;
+          TargetFile := eFile_s.Text;
+          Patterns := eSearchPatterns.Text;
 
-        ThFindInFile.LoadFunc(FSearchDLL, TaskInfo.Name);
+          FreeOnTerminate := True;
 
-        Application.ProcessMessages;
-        ThFindInFile.Start; //запускаем поток
+          TaskIdx := lvTasks.ItemIndex;
+
+          LoadFunc(FSearchDLL, TaskInfo.Name);
+
+          Application.ProcessMessages;
+          Start; //запускаем поток
+        end;
       end;
-    2:;
+(*    2: begin
+        TTask.Create(
+          procedure()
+          begin
+
+          end
+        );
+      end;*)
   else
-    ShowMessage('Неизвестная функция: "' + TaskInfo.Name + '"');
+    ShowMessage('Отсутствует обработка функции: "' + TaskInfo.Name + '"');
   end;
 end;
 
@@ -529,7 +559,8 @@ begin
     if FTasks[lvTasks.Selected.Index].FThread <> nil then
       //(FTasks[lvTasks.Selected.Index].FThread as TThFindFiles).Stop;
       ThFindFiles.Stop;
-    UpdateTasksList;
+    StatusTask;
+//UpdateTasksList;
     AddResult('Попытка прервать выполнение задачи...');
   end
   else
@@ -552,8 +583,9 @@ procedure TfrmMain.lvTasksDblClick(Sender: TObject);
 var
   TaskInfo: TTaskInfo;
 begin
-  TaskInfo := FTasks[lvTasks.ItemIndex];
-  ShowMessage(Format('%d: %s (%d)', [lvTasks.ItemIndex, TaskInfo.Name, TaskInfo.ID]));
+  bStartTaskClick(Sender);
+(*  TaskInfo := FTasks[lvTasks.ItemIndex];
+  ShowMessage(Format('%d: %s (%d)', [lvTasks.ItemIndex, TaskInfo.Name, TaskInfo.ID]));*)
 end;
 
 procedure TfrmMain.UnloadSevenZipDLL;
@@ -571,28 +603,28 @@ var
   Thread: TThread;
   ArchiveName: string;
 begin
-  if Trim(eStartFolder.Text) = '' then
-  begin
+  if Trim(eFile_s.Text) = '' then begin
     ShowMessage('Укажите папку для архивирования');
     Exit;
   end;
-  ArchiveName := IncludeTrailingPathDelimiter(eStartFolder.Text) + 'archive_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.zip';
+  ArchiveName := IncludeTrailingPathDelimiter(eFile_s.Text) + 'archive_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.zip';
   FCancelled := False;
   mResults.Clear;
   AddResult('=== Начало архивирования ===');
-  AddResult('Папка: ' + eStartFolder.Text);
+  AddResult('Папка: ' + eFile_s.Text);
   AddResult('Архив: ' + ArchiveName);
   AddResult('----------------------------');
+
   //Создаем задачу
-  TaskInfo.ID := FNextTaskID;
-  Inc(FNextTaskID);
   TaskInfo.Name := 'Архивирование 7-Zip';
   TaskInfo.Status := tsWaiting;
   TaskInfo.StartTime := Now;
   TaskInfo.EndTime := 0;
   SetLength(FTasks, Length(FTasks) + 1);
   FTasks[High(FTasks)] := TaskInfo;
-  UpdateTasksList;
+  StatusTask;
+//UpdateTasksList;
+
   //Запускаем в отдельном потоке
   Thread := TThread.CreateAnonymousThread(
     procedure
@@ -610,7 +642,8 @@ begin
       TThread.Synchronize(nil,
         procedure
         begin
-          UpdateTasksList;
+          StatusTask;
+//UpdateTasksList;
         end);
       try
         //Получаем функцию из DLL
@@ -618,10 +651,10 @@ begin
         if not Assigned(ArchiveFunc) then
           raise Exception.Create('Функция ArchiveFolder не найдена в DLL');
         //Подготавливаем параметры
-        FolderPath := StrAlloc(Length(eStartFolder.Text) + 1);
+        FolderPath := StrAlloc(Length(eFile_s.Text) + 1);
         ArchivePath := StrAlloc(Length(ArchiveName) + 1);
         try
-          StrPCopy(FolderPath, eStartFolder.Text);
+          StrPCopy(FolderPath, eFile_s.Text);
           StrPCopy(ArchivePath, ArchiveName);
           //Вызываем функцию архивации с callback'ом
           Res := ArchiveFunc(FolderPath, ArchivePath, @ArchiveLogCallback);
@@ -674,10 +707,16 @@ begin
       TThread.Synchronize(nil,
         procedure
         begin
-          UpdateTasksList;
+          StatusTask;
+//UpdateTasksList;
         end);
     end);
   Thread.Start;
+end;
+
+procedure TfrmMain.StringReceived(const S: string);
+begin
+  mResults.Lines.Add(S);
 end;
 
 end.

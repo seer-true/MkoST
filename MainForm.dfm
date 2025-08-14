@@ -11,6 +11,7 @@ object frmMain: TfrmMain
   Font.Name = 'Tahoma'
   Font.Style = []
   OnCreate = FormCreate
+  PixelsPerInch = 96
   TextHeight = 13
   object mResults: TMemo
     Left = 0
@@ -20,8 +21,8 @@ object frmMain: TfrmMain
     Align = alClient
     ScrollBars = ssBoth
     TabOrder = 0
-    ExplicitWidth = 596
-    ExplicitHeight = 236
+    ExplicitTop = 480
+    ExplicitHeight = 103
   end
   object pLower: TPanel
     Left = 0
@@ -30,8 +31,6 @@ object frmMain: TfrmMain
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 582
-    ExplicitWidth = 596
     object btnCancelTask: TButton
       Left = 333
       Top = 6
@@ -58,7 +57,6 @@ object frmMain: TfrmMain
     Height = 191
     Align = alTop
     TabOrder = 2
-    ExplicitWidth = 596
     object lblMasks: TLabel
       Left = 8
       Top = 39
@@ -82,13 +80,12 @@ object frmMain: TfrmMain
       TabOrder = 0
       OnClick = btnSelectFolderClick
     end
-    object eStartFolder: TEdit
+    object eFile_s: TEdit
       Left = 8
       Top = 12
       Width = 584
       Height = 21
       TabOrder = 1
-      Text = 'D:\tmp\'
     end
     object btnSearchFiles: TButton
       Left = 134
@@ -97,6 +94,7 @@ object frmMain: TfrmMain
       Height = 25
       Caption = #1055#1086#1080#1089#1082' '#1092#1072#1081#1083#1086#1074
       TabOrder = 3
+      Visible = False
       OnClick = btnSearchFilesClick
     end
     object eMasks: TEdit
@@ -113,7 +111,7 @@ object frmMain: TfrmMain
       Width = 584
       Height = 21
       TabOrder = 4
-      Text = #9660';10'
+      Text = 'Delphi;select'
       TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
     end
     object btnSelectFile: TButton
@@ -132,10 +130,11 @@ object frmMain: TfrmMain
       Height = 25
       Caption = #1055#1086#1080#1089#1082' '#1074' '#1092#1072#1081#1083#1077
       TabOrder = 6
+      Visible = False
       OnClick = btnSearchInFileClick
     end
     object btnArchive: TButton
-      Left = 472
+      Left = 473
       Top = 85
       Width = 120
       Height = 25
@@ -151,7 +150,6 @@ object frmMain: TfrmMain
     Height = 155
     Align = alTop
     TabOrder = 3
-    ExplicitWidth = 596
     object lvTasks: TListView
       Left = 1
       Top = 1
@@ -183,7 +181,6 @@ object frmMain: TfrmMain
       TabOrder = 0
       ViewStyle = vsReport
       OnDblClick = lvTasksDblClick
-      ExplicitWidth = 594
     end
     object bStartTask: TButton
       Left = 9
