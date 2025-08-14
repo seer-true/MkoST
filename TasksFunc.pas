@@ -32,6 +32,7 @@ type
   public
     OnStringReceived: TStringEvent;
     OnStatusTask: TStatusTask;
+
     TaskIdx: Integer; //индекс задачи в FTasks
 
     constructor Create(ACreateSuspended: Boolean);
@@ -188,7 +189,7 @@ begin
     FTasks[TaskIdx].Status := tsCompleted;
 
   Terminate;
-  OnStatusTask;
+  OnStatusTask(TaskIdx);
 //  UpdateTasksList;
 end;
 
@@ -240,7 +241,7 @@ begin
     FTasks[TaskIdx].Status := tsCompleted;
 
   Terminate;
-  OnStatusTask;
+  OnStatusTask(TaskIdx);
 //  UpdateTasksList;
 end;
 

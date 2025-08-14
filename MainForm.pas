@@ -433,6 +433,7 @@ begin
       Item.Caption := IntToStr(FTasks[i].ID);
 
       Item.SubItems.Add(FTasks[i].Name);
+
       case FTasks[i].Status of
         tsWaiting:
           StatusText := 'Ожидание';
@@ -486,9 +487,11 @@ begin
         TaskInfo.FThread := ThFindFiles;
 
         eFile_s.Text := 'D:\Insures\insures5ase\bin\'; // для тестов
+        eFile_s.Text := 'C:\DataBase\';
 
         with ThFindFiles do begin
           OnStringReceived := StringReceived;
+          OnStatusTask := StatusTask;
 
           StartFolder := eFile_s.Text;
           Masks := eMasks.Text;
@@ -508,9 +511,11 @@ begin
         TaskInfo.FThread := ThSearchPattern;
 
         eFile_s.Text := 'D:\Insures\insures5ase\bin\iRefBooks.rsm'; // для тестов
+        eFile_s.Text := 'C:\DataBase\24_03_2020_08_40.FDB';
 
         with ThSearchPattern do begin
           OnStringReceived := StringReceived;
+          OnStatusTask := StatusTask;
 
           TargetFile := eFile_s.Text;
           Patterns := eSearchPatterns.Text;

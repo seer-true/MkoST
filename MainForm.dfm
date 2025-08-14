@@ -11,7 +11,6 @@ object frmMain: TfrmMain
   Font.Name = 'Tahoma'
   Font.Style = []
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object mResults: TMemo
     Left = 0
@@ -21,8 +20,8 @@ object frmMain: TfrmMain
     Align = alClient
     ScrollBars = ssBoth
     TabOrder = 0
-    ExplicitTop = 480
-    ExplicitHeight = 103
+    ExplicitWidth = 596
+    ExplicitHeight = 236
   end
   object pLower: TPanel
     Left = 0
@@ -31,6 +30,8 @@ object frmMain: TfrmMain
     Height = 41
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 582
+    ExplicitWidth = 596
     object btnCancelTask: TButton
       Left = 333
       Top = 6
@@ -57,6 +58,7 @@ object frmMain: TfrmMain
     Height = 191
     Align = alTop
     TabOrder = 2
+    ExplicitWidth = 596
     object lblMasks: TLabel
       Left = 8
       Top = 39
@@ -150,6 +152,7 @@ object frmMain: TfrmMain
     Height = 155
     Align = alTop
     TabOrder = 3
+    ExplicitWidth = 596
     object lvTasks: TListView
       Left = 1
       Top = 1
@@ -181,6 +184,7 @@ object frmMain: TfrmMain
       TabOrder = 0
       ViewStyle = vsReport
       OnDblClick = lvTasksDblClick
+      ExplicitWidth = 594
     end
     object bStartTask: TButton
       Left = 9
