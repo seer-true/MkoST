@@ -12,7 +12,7 @@ uses
 
 type
   TStringEvent = procedure(const S: string) of object;
-  TStatusTask = procedure(const TaskIdx: Integer = -1) of object;
+  TStatusTask = procedure(const TaskIdx: Integer; const Status: Integer) of object;
 
   ///<summary>
   ///Базовый класс для вызова потоков
@@ -27,13 +27,12 @@ type
   protected
     procedure TerminatedSet; override;
     procedure AddResult();
-//    procedure UpdateTasksList();
 
   public
     OnStringReceived: TStringEvent;
     OnStatusTask: TStatusTask;
 
-    TaskIdx: Integer; //индекс задачи в FTasks
+    TaskID: Integer; //индекс задачи в FTasks
 
     constructor Create(ACreateSuspended: Boolean);
     destructor Destroy; override;
@@ -140,9 +139,10 @@ var
   Mask: string;
   Res: Boolean;
   FileCount: Integer;
+  Status: Integer;
 begin
   inherited;
-  FTasks[TaskIdx].Status := tsRunning;
+  Status := Ord(tsRunning);
 
   SearchFunc := FAddrFunc;
 
@@ -168,11 +168,11 @@ begin
 
 //AddResult;
       end;
-      //FTerminateEvent.WaitFor(5000);
+      FTerminateEvent.WaitFor(5000);
     end
     else
     begin
-      FTasks[TaskIdx].Status := tsCancelled;
+      Status := Ord(tsCancelled);
       FAddMess := 'Задача остановлена пользователем.';
       if Assigned(OnStringReceived) then
         Synchronize(
@@ -180,17 +180,18 @@ begin
           begin
             OnStringReceived(FAddMess);
           end);
-//      AddResult;
-
       break;
     end;
   end;
-  if not Terminated then
-    FTasks[TaskIdx].Status := tsCompleted;
-
-  Terminate;
-  OnStatusTask(TaskIdx);
-//  UpdateTasksList;
+  if not Terminated then begin
+    Status := Ord(tsCompleted);
+    Terminate;
+  end;
+  Synchronize(
+    procedure
+    begin
+      OnStatusTask(TaskID, Status);
+    end);
 end;
 
 { TThSearchPattern }
@@ -205,7 +206,7 @@ var
   Pattern: string;
 begin
   inherited;
-  FTasks[TaskIdx].Status := tsRunning;
+//FTasks[TaskIdx].Status := tsRunning;
 
   SearchPattern := FAddrFunc;
   try
@@ -216,19 +217,15 @@ begin
         Res := SearchPattern(PChar(TargetFile), PChar(Pattern), Results, TotalMatches);
         if Res then begin
           FAddMess := Format('Найдено %s%d вхождений %s' + sLineBreak, [IfThen(TotalMatches < Length(Results), 'более ', ''), Length(Results),
-            Pattern]);
-          Synchronize(AddResult);
-          FAddMess := '';
+            Pattern]); Synchronize(AddResult); FAddMess := '';
           for var j := 0 to Length(Results) - 1 do
             FAddMess := FAddMess + IntToStr(Results[j]) + sLineBreak;
           Synchronize(AddResult);
         end;
       end
-      else
-      begin
-        FAddMess := 'Задача остановлена пользователем.';
-        Synchronize(AddResult);
-        FTasks[TaskIdx].Status := tsCancelled;
+      else begin
+        FAddMess := 'Задача остановлена пользователем.'; Synchronize(AddResult);
+//FTasks[TaskIdx].Status := tsCancelled;
         break;
       end;
 
@@ -238,11 +235,11 @@ begin
   end;
 
   if not Terminated then
-    FTasks[TaskIdx].Status := tsCompleted;
+//FTasks[TaskIdx].Status := tsCompleted;
 
-  Terminate;
-  OnStatusTask(TaskIdx);
-//  UpdateTasksList;
+    Terminate;
+  OnStatusTask(TaskID, 1);
+//UpdateTasksList;
 end;
 
 { TThFindInFile }
@@ -257,15 +254,13 @@ var
   TotalMatches: Int64;
 begin
   inherited;
-  FTasks[TaskIdx].Status := tsRunning;
+//FTasks[TaskIdx].Status := tsRunning;
 
-  SearchFunc := FAddrFunc;
-  PatternsArray := Patterns.Split([';'], TStringSplitOptions.ExcludeEmpty);
-  for Pattern in PatternsArray do
-  begin
-    if not Terminated then
-    begin
-      Res := SearchFunc(PChar(TargetFile), PChar(Pattern), Results, TotalMatches); //вызов
+  SearchFunc := FAddrFunc; PatternsArray := Patterns.Split([';'], TStringSplitOptions.ExcludeEmpty);
+  for Pattern in PatternsArray do begin
+    if not Terminated then begin
+      Res := SearchFunc(PChar(TargetFile), PChar(Pattern), Results, TotalMatches);
+  //вызов
       if Res then begin
         FAddMess := '111111'; (* Format('Найдено %d вхождений %s:%s%s%s',
           [TotalMatches, Mask, sLineBreak, FileList, sLineBreak]); *)

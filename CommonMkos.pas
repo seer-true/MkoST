@@ -34,7 +34,7 @@ type
   ///<summary>
   ///Статус задачи
   ///</summary>
-  TTaskStatus = (tsWaiting, //Ожидание
+  TTaskStatus = (tsWaiting = 0, //Ожидание
     tsRunning, //Выполняется
     tsCompleted, //Отменено
     tsError, //Ошибка
@@ -65,7 +65,7 @@ var
   F7ZipDLL: THandle;
 
   FCancelled: Boolean;
-  FTasks: TArray<TTaskInfo>; // массив задач
+//  FTasks: TArray<TTaskInfo>; // массив задач
 
 implementation
 
