@@ -11,7 +11,6 @@ object frmMain: TfrmMain
   Font.Name = 'Tahoma'
   Font.Style = []
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object mResults: TMemo
     Left = 0
@@ -21,7 +20,8 @@ object frmMain: TfrmMain
     Align = alClient
     ScrollBars = ssBoth
     TabOrder = 0
-    ExplicitTop = 347
+    ExplicitWidth = 596
+    ExplicitHeight = 236
   end
   object pLower: TPanel
     Left = 0
@@ -30,6 +30,8 @@ object frmMain: TfrmMain
     Height = 41
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 582
+    ExplicitWidth = 596
     object btnCancelTask: TButton
       Left = 333
       Top = 6
@@ -56,6 +58,7 @@ object frmMain: TfrmMain
     Height = 191
     Align = alTop
     TabOrder = 2
+    ExplicitWidth = 596
     object lblMasks: TLabel
       Left = 8
       Top = 39
@@ -100,7 +103,7 @@ object frmMain: TfrmMain
       Width = 584
       Height = 21
       TabOrder = 3
-      Text = 'Delphi;select'
+      Text = '71i;100'
       TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
     end
     object btnSelectFile: TButton
@@ -129,6 +132,7 @@ object frmMain: TfrmMain
     Height = 155
     Align = alTop
     TabOrder = 3
+    ExplicitWidth = 596
     object bStartTask: TButton
       Left = 9
       Top = 122
@@ -203,7 +207,6 @@ object frmMain: TfrmMain
     end
     object cdsTasksStatus: TSmallintField
       FieldName = 'Status'
-      Visible = False
     end
     object cdsTasksSStatus: TStringField
       DisplayLabel = #1057#1090#1072#1090#1091#1089
