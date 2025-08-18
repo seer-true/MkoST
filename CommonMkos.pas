@@ -25,11 +25,13 @@ type
 
   TSearchInFileFunc = function(FileName: PChar; Patterns: PChar; out Results: PChar; out TotalMatches: Int64): Boolean stdcall;
 
-  TArchiveFolderFunc = function(FolderPath, ArchiveName: PChar; Callback: Pointer): Boolean; stdcall;
-
   TSearchPattern = function(FileName: PChar; Pattern: PChar; var Results: TArray<Int64>; var TotalMatches: Int64): Boolean; stdcall;
 
+  TSearchCallback = procedure(Msg: PChar) of object; stdcall;
+  TSearchPattern2 = function(FileName: PChar; Pattern: PChar; var TotalMatches: Int64; SearchCallback: TSearchCallback): Boolean; stdcall;
+
   TLogCallback = procedure(Msg: PChar) of object; stdcall;
+  TArchiveFolderFunc = function(FolderPath, ArchiveName: PChar; LogCallback: TLogCallback): Boolean; stdcall;
 
   ///<summary>
   ///Статус задачи
@@ -58,7 +60,7 @@ type
 procedure ShowDllExports(const hDll: THandle; OutputList: TStringList);
 
 const
-  RealTasks: array[0..2] of string = ('SearchFiles', 'SearchPattern', 'ArchiveFolder');
+  RealTasks: array[0..3] of string = ('SearchFiles', 'SearchPattern', 'SearchPattern2', 'ArchiveFolder');
 
 var
   FSearchDLL: THandle;
