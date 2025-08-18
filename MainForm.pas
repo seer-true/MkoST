@@ -284,7 +284,7 @@ begin
           OnStatusTask := StatusTask;
 
           SetLength(FPosPatt, 0);
-          OnGetPosition := GetPosition;
+//          OnGetPosition := GetPosition;
 
           TargetFile := eFile_s.Text;
           Patterns := eSearchPatterns.Text;

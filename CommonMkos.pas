@@ -31,7 +31,7 @@ type
   TSearchPattern2 = function(FileName: PChar; Pattern: PChar; var TotalMatches: Int64; SearchCallback: TSearchCallback): Boolean; stdcall;
 
   TLogCallback = procedure(Msg: PChar) of object; stdcall;
-  TArchiveFolderFunc = function(FolderPath, ArchiveName: PChar; LogCallback: TLogCallback): Boolean; stdcall;
+  TArchiveFolderFunc = function(FolderPath, ArchiveName: PChar; LogCallback: Pointer(*TLogCallback*)): Boolean; stdcall;
 
   ///<summary>
   ///Статус задачи

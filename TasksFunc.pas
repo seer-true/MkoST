@@ -107,20 +107,6 @@ begin
     raise Exception.Create('Функция "' + NameFunc + '" не найдена в DLL');
 end;
 
-(* procedure TBaseThread.AddResult;
-  begin
-  Synchronize(
-  procedure
-  var
-  str: string;
-  begin
-  str := FAddMess;
-  // frmMain.mResults.Lines.Add(FAddMess);
-  // frmMain.mResults.Perform(EM_LINESCROLL, 0, frmMain.mResults.Lines.Count);
-  // frmMain.UpdateTasksList;
-  end);
-  end; *)
-
 procedure TBaseThread.Stop;
 begin
   if not Terminated then
