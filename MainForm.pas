@@ -1,7 +1,7 @@
-///<remarks>
-///Убийство потока <see href="https://stackoverflow.com/questions/14033894/how-do-i-stop-a-thread-before-its-finished-running" /><br />
-///Пример <see href="https://www.kansoftware.ru/?tid=13951" />
-///</remarks>
+/// <remarks>
+/// Убийство потока <see href="https://stackoverflow.com/questions/14033894/how-do-i-stop-a-thread-before-its-finished-running" /><br />
+/// Пример <see href="https://www.kansoftware.ru/?tid=13951" />
+/// </remarks>
 unit MainForm;
 
 interface
@@ -41,6 +41,8 @@ type
     b1: TButton;
     cdsTasksSStatus: TStringField;
     cdsTasksFThread: TLargeintField;
+    cbMatches: TComboBox;
+    Label1: TLabel;
 
     procedure FormCreate(Sender: TObject);
     procedure btnSelectFolderClick(Sender: TObject);
@@ -53,10 +55,11 @@ type
     procedure lvTasksDblClick(Sender: TObject);
     procedure cdsTasksCalcFields(DataSet: TDataSet);
     procedure b1Click(Sender: TObject);
+    procedure cbMatchesKeyPress(Sender: TObject; var Key: Char);
   private
     FPosPatt: TArray<Int64>;
     ThFindFiles: TThFindFiles;
-    //ThFindInFile: TThFindInFile;
+    // ThFindInFile: TThFindInFile;
     ThSearchPattern: TThSearchPattern;
     ThSearchPattern2: TThSearchPattern2;
 
@@ -90,7 +93,7 @@ begin
   TThread.Queue(nil,
     procedure
     begin
-      frmMain.mResults.Lines.Add(string(Msg)); //Или выводим в спец. поле
+      frmMain.mResults.Lines.Add(string(Msg)); // Или выводим в спец. поле
     end);
 end;
 
@@ -106,7 +109,7 @@ end;
 procedure TfrmMain.FormCreate(Sender: TObject);
 var
   ListTasks: TStringList;
-  //TaskInfo: TTaskInfo;
+  // TaskInfo: TTaskInfo;
 begin
   LoadSearchDLL;
   LoadSevenZipDLL;
@@ -114,7 +117,7 @@ begin
   cdsTasks.CreateDataSet;
   cdsTasks.Open;
   try
-    //поисковая DLL
+    // поисковая DLL
     ShowDllExports(FSearchDLL, ListTasks);
     for var i := 0 to Length(RealTasks) - 1 do begin
       if ListTasks.IndexOf(RealTasks[i]) >= 0 then begin
@@ -122,7 +125,7 @@ begin
       end;
     end;
     ListTasks.Clear;
-    //архивирующая DLL
+    // архивирующая DLL
     ShowDllExports(F7ZipDLL, ListTasks);
     for var i := Low(RealTasks) to High(RealTasks) do begin
       if ListTasks.IndexOf(RealTasks[i]) >= 0 then begin
@@ -213,8 +216,8 @@ procedure TfrmMain.bStartTaskClick(Sender: TObject);
   P: Pointer; *)
 begin
   case IndexStr(cdsTasksTask.AsString, RealTasks) of
-    0: begin //поиск файлов
-        ThFindFiles := TThFindFiles.Create(True); //создаем поток
+    0: begin // поиск файлов
+        ThFindFiles := TThFindFiles.Create(True); // создаем поток
 
         cdsTasks.Edit;
         ThFindFiles.TaskID := cdsTasksID.AsInteger;
@@ -223,8 +226,8 @@ begin
 
         ThFindFiles.TaskID := cdsTasksID.AsInteger;
 
-        eFile_s.Text := 'D:\Insures\insures5ase\bin\'; //для тестов
-//        eFile_s.Text := 'C:\DataBase\';
+//        eFile_s.Text := 'D:\Insures\insures5ase\bin\'; // для тестов
+        eFile_s.Text := 'C:\DataBase\';
 
         with ThFindFiles do begin
           OnStringReceived := StringReceived;
@@ -237,46 +240,19 @@ begin
 
           LoadFunc(FSearchDLL, cdsTasksTask.AsString);
 
-        //Application.ProcessMessages;
-          Start; //запускаем поток
+          // Application.ProcessMessages;
+          Start; // запускаем поток
         end;
       end;
-    1: begin //поиск в файле
-        ThSearchPattern := TThSearchPattern.Create(True); //создаем поток
+    1: begin // поиск в файле
+        ThSearchPattern := TThSearchPattern.Create(True); // создаем поток
 
         cdsTasks.Edit;
         ThSearchPattern.TaskID := cdsTasksID.AsInteger;
         cdsTasksFThread.AsLargeInt := Integer(ThSearchPattern);
         cdsTasks.Post;
 
-        eFile_s.Text := 'D:\Insures\insures5ase\bin\iRefBooks.rsm'; //для тестов\
-//        eFile_s.Text := 'C:\DevelopXE\Declension.7z';
-
-        with ThSearchPattern do begin
-          OnStringReceived := StringReceived;
-          OnStatusTask := StatusTask;
-
-          SetLength(FPosPatt, 0);
-          TargetFile := eFile_s.Text;
-          Patterns := eSearchPatterns.Text;
-
-          FreeOnTerminate := True;
-
-          LoadFunc(FSearchDLL, cdsTasksTask.AsString);
-
-        //Application.ProcessMessages;
-          Start; //запускаем поток
-        end;
-      end;
-    2: begin //поиск в файле2
-        ThSearchPattern := TThSearchPattern.Create(True); //создаем поток
-
-        cdsTasks.Edit;
-        ThSearchPattern.TaskID := cdsTasksID.AsInteger;
-        cdsTasksFThread.AsLargeInt := Integer(ThSearchPattern);
-        cdsTasks.Post;
-
-      //eFile_s.Text := 'D:\Insures\insures5ase\bin\iRefBooks.rsm'; //для тестов\
+//        eFile_s.Text := 'D:\Insures\insures5ase\bin\iRefBooks.rsm'; // для тестов\
         eFile_s.Text := 'C:\DevelopXE\Declension.7z';
 
         with ThSearchPattern do begin
@@ -284,7 +260,35 @@ begin
           OnStatusTask := StatusTask;
 
           SetLength(FPosPatt, 0);
-//          OnGetPosition := GetPosition;
+          TargetFile := eFile_s.Text;
+          Patterns := eSearchPatterns.Text;
+          Matches := StrToUInt(cbMatches.Text);
+
+          FreeOnTerminate := True;
+
+          LoadFunc(FSearchDLL, cdsTasksTask.AsString);
+
+          // Application.ProcessMessages;
+          Start; // запускаем поток
+        end;
+      end;
+    2: begin // поиск в файле2
+        ThSearchPattern := TThSearchPattern.Create(True); // создаем поток
+
+        cdsTasks.Edit;
+        ThSearchPattern.TaskID := cdsTasksID.AsInteger;
+        cdsTasksFThread.AsLargeInt := Integer(ThSearchPattern);
+        cdsTasks.Post;
+
+        // eFile_s.Text := 'D:\Insures\insures5ase\bin\iRefBooks.rsm'; //для тестов\
+        eFile_s.Text := 'C:\DevelopXE\Declension.7z';
+
+        with ThSearchPattern do begin
+          OnStringReceived := StringReceived;
+          OnStatusTask := StatusTask;
+
+          SetLength(FPosPatt, 0);
+          // OnGetPosition := GetPosition;
 
           TargetFile := eFile_s.Text;
           Patterns := eSearchPatterns.Text;
@@ -293,18 +297,18 @@ begin
 
           LoadFunc(FSearchDLL, cdsTasksTask.AsString);
 
-        //Application.ProcessMessages;
-          Start; //запускаем поток
+          // Application.ProcessMessages;
+          Start; // запускаем поток
         end;
       end;
 
     3: begin
         StartArchiveTask;
-      (* TTask.Create(
-        procedure()
-        begin
+        (* TTask.Create(
+          procedure()
+          begin
 
-        end); *)
+          end); *)
       end
   else
     ShowMessage('Отсутствует обработка функции: "' + cdsTasksTask.AsString + '"');
@@ -352,6 +356,12 @@ begin
   mResults.Clear;
 end;
 
+procedure TfrmMain.cbMatchesKeyPress(Sender: TObject; var Key: Char);
+begin
+  if not(Key in ['0' .. '9', #8]) then
+    Key := #0;
+end;
+
 procedure TfrmMain.cdsTasksCalcFields(DataSet: TDataSet);
 begin
   case cdsTasksStatus.AsInteger of
@@ -360,8 +370,6 @@ begin
         cdsTasksSStatus.Value := 'Выполняется';
         if cdsTasksTimeStart.Value = null then
           cdsTasksTimeStart.Value := now();
-      (* if FTasks[TaskIdx].StartTime = 0 then
-        FTasks[TaskIdx].StartTime := Now(); *)
       end;
     2: begin
         cdsTasksSStatus.Value := 'Завершено';
@@ -375,11 +383,6 @@ begin
         cdsTasksSStatus.Value := 'Отменено';
       end;
   end;
-  (* TTaskStatus = (tsWaiting = 0, //Ожидание
-    tsRunning, //Выполняется
-    tsCompleted, //Отменено
-    tsError, //Ошибка
-    tsCancelled); //Завершено *)
 end;
 
 procedure TfrmMain.LoadSevenZipDLL;
@@ -404,7 +407,7 @@ end;
 
 procedure TfrmMain.StartArchiveTask;
 var
-//  TaskInfo: TTaskInfo;
+  // TaskInfo: TTaskInfo;
   Thread: TThread;
   ArchiveName: string;
 begin
@@ -420,17 +423,8 @@ begin
   AddResult('Архив: ' + ArchiveName);
   AddResult('----------------------------');
 
-  //Создаем задачу
-(*  TaskInfo.Name := 'Архивирование 7-Zip';
-  TaskInfo.Status := tsWaiting;
-  TaskInfo.StartTime := now;
-  TaskInfo.EndTime := 0;*)
-  //SetLength(FTasks, Length(FTasks) + 1);
-  //FTasks[High(FTasks)] := TaskInfo;
   StatusTask;
-  //UpdateTasksList;
-
-  //Запускаем в отдельном потоке
+  // Запускаем в отдельном потоке
   Thread := TThread.CreateAnonymousThread(
     procedure
     var
@@ -448,17 +442,17 @@ begin
           StatusTask;
         end);
       try
-        //Получаем функцию из DLL
+        // Получаем функцию из DLL
         ArchiveFunc := GetProcAddress(F7ZipDLL, 'ArchiveFolder');
         if not Assigned(ArchiveFunc) then
           raise Exception.Create('Функция ArchiveFolder не найдена в DLL');
-        //Подготавливаем параметры
+        // Подготавливаем параметры
         FolderPath := StrAlloc(Length(eFile_s.Text) + 1);
         ArchivePath := StrAlloc(Length(ArchiveName) + 1);
         try
           StrPCopy(FolderPath, eFile_s.Text);
           StrPCopy(ArchivePath, ArchiveName);
-          //Вызываем функцию архивации с callback'ом
+          // Вызываем функцию архивации с callback'ом
           Res := ArchiveFunc(FolderPath, ArchivePath, @ArchiveLogCallback);
           if Res then begin
             if FCancelled then begin
@@ -467,7 +461,7 @@ begin
                 begin
                   AddResult('=== Архивирование прервано пользователем ===');
                 end);
-              //FTasks[TaskIdx].Status := tsCancelled;
+              // FTasks[TaskIdx].Status := tsCancelled;
             end
             else begin
               TThread.Synchronize(nil,
@@ -475,7 +469,7 @@ begin
                 begin
                   AddResult('=== Архивирование успешно завершено ===');
                 end);
-              //FTasks[TaskIdx].Status := tsCompleted;
+              // FTasks[TaskIdx].Status := tsCompleted;
             end;
           end
           else begin
@@ -484,7 +478,7 @@ begin
               begin
                 AddResult('=== Ошибка архивирования ===');
               end);
-            //FTasks[TaskIdx].Status := tsError;
+            // FTasks[TaskIdx].Status := tsError;
           end;
         finally
           StrDispose(FolderPath);
@@ -497,15 +491,15 @@ begin
             begin
               AddResult('Ошибка: ' + E.Message);
             end);
-          //FTasks[TaskIdx].Status := tsError;
+          // FTasks[TaskIdx].Status := tsError;
         end;
       end;
-      //FTasks[TaskIdx].EndTime := Now;
+      // FTasks[TaskIdx].EndTime := Now;
       TThread.Synchronize(nil,
         procedure
         begin
           StatusTask;
-          //UpdateTasksList;
+          // UpdateTasksList;
         end);
     end);
   Thread.Start;

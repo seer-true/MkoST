@@ -53,6 +53,7 @@ type
     procedure Execute; override;
   public
     TargetFile, Patterns: String;
+    Matches: Int64;
   end;
 
   TThSearchPattern2 = class(TBaseThread)//поиск в файле
@@ -221,6 +222,8 @@ begin
 //  FillChar(Results, sizeof(Results), 0);
   SetLength(Results, 0);
 
+  TotalMatches := Matches;
+
   Synchronize(
     procedure
     begin
@@ -232,9 +235,7 @@ begin
     PatternsArray := Patterns.Split([';'], TStringSplitOptions.ExcludeEmpty);
     SetLength(Results, 0);
 
-    for Pattern in PatternsArray do
-    begin
-      TotalMatches := 15;
+    for Pattern in PatternsArray do begin
       if not Terminated then
       begin
         Res := SearchPattern(PChar(TargetFile), PChar(Pattern), Results, TotalMatches);

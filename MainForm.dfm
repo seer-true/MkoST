@@ -11,7 +11,6 @@ object frmMain: TfrmMain
   Font.Name = 'Tahoma'
   Font.Style = []
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object mResults: TMemo
     Left = 0
@@ -21,6 +20,8 @@ object frmMain: TfrmMain
     Align = alClient
     ScrollBars = ssBoth
     TabOrder = 0
+    ExplicitWidth = 596
+    ExplicitHeight = 236
   end
   object pLower: TPanel
     Left = 0
@@ -29,6 +30,8 @@ object frmMain: TfrmMain
     Height = 41
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 582
+    ExplicitWidth = 596
     object btnCancelTask: TButton
       Left = 333
       Top = 6
@@ -55,6 +58,7 @@ object frmMain: TfrmMain
     Height = 191
     Align = alTop
     TabOrder = 2
+    ExplicitWidth = 596
     object lblMasks: TLabel
       Left = 8
       Top = 39
@@ -68,6 +72,13 @@ object frmMain: TfrmMain
       Width = 216
       Height = 13
       Caption = #1055#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1076#1083#1103' '#1087#1086#1080#1089#1082#1072' '#1074' '#1092#1072#1081#1083#1077':'
+    end
+    object Label1: TLabel
+      Left = 286
+      Top = 165
+      Width = 198
+      Height = 13
+      Caption = #1052#1072#1082#1089#1080#1084#1072#1083#1100#1085#1086#1077' '#1082#1086#1083#1080#1095#1077#1089#1090#1074#1086' '#1089#1086#1074#1087#1072#1076#1077#1085#1080#1081
     end
     object btnSelectFolder: TButton
       Left = 8
@@ -120,6 +131,21 @@ object frmMain: TfrmMain
       TabOrder = 5
       OnClick = btnArchiveClick
     end
+    object cbMatches: TComboBox
+      Left = 504
+      Top = 162
+      Width = 57
+      Height = 21
+      ItemIndex = 0
+      TabOrder = 6
+      Text = '10'
+      OnKeyPress = cbMatchesKeyPress
+      Items.Strings = (
+        '10'
+        '50'
+        '100'
+        '1000')
+    end
   end
   object pTasks: TPanel
     Left = 0
@@ -128,9 +154,10 @@ object frmMain: TfrmMain
     Height = 155
     Align = alTop
     TabOrder = 3
+    ExplicitWidth = 596
     object bStartTask: TButton
       Left = 9
-      Top = 122
+      Top = 124
       Width = 119
       Height = 25
       Caption = #1047#1072#1087#1091#1089#1082
