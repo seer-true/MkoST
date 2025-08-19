@@ -11,6 +11,7 @@ object frmMain: TfrmMain
   Font.Name = 'Tahoma'
   Font.Style = []
   OnCreate = FormCreate
+  PixelsPerInch = 96
   TextHeight = 13
   object mResults: TMemo
     Left = 0
@@ -160,8 +161,8 @@ object frmMain: TfrmMain
       TitleFont.Style = []
     end
     object b1: TButton
-      Left = 330
-      Top = 125
+      Left = 524
+      Top = 122
       Width = 75
       Height = 25
       Caption = 'b1'

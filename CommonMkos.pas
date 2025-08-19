@@ -15,8 +15,11 @@ type
     Positions: TArray<Int64>;
   end;
 
-//  PSearchResults = ^TSearchResults;
-  TSearchResults = array of TSearchResult;
+//  TSearchResults = array of TSearchResult;
+
+//  TSearchResults = array[0..999] of Int64;
+//  TSearchResults = array of Int64;
+  TSearchResults = TArray<Int64>;
 
   ///<summary>
   ///Тип функции поска файлов в DLL
@@ -25,7 +28,8 @@ type
 
   TSearchInFileFunc = function(FileName: PChar; Patterns: PChar; out Results: PChar; out TotalMatches: Int64): Boolean stdcall;
 
-  TSearchPattern = function(FileName: PChar; Pattern: PChar; var Results: TArray<Int64>; var TotalMatches: Int64): Boolean; stdcall;
+//  TSearchPattern = function(FileName: PChar; Pattern: PChar; var Results: TArray<Int64>; var TotalMatches: Int64): Boolean; stdcall;
+  TSearchPattern = function(FileName: PChar; Pattern: PChar; var Results: TSearchResults; var TotalMatches: Int64): Boolean; stdcall;
 
   TSearchCallback = procedure(Msg: PChar) of object; stdcall;
   TSearchPattern2 = function(FileName: PChar; Pattern: PChar; var TotalMatches: Int64; SearchCallback: TSearchCallback): Boolean; stdcall;
@@ -45,14 +49,14 @@ type
   ///<summary>
   ///о конкретной задаче
   ///</summary>
-  TTaskInfo = record
+(*  TTaskInfo = record
     ID: Integer;
     Name: string;
     Status: TTaskStatus;
     StartTime: TDateTime;
     EndTime: TDateTime;
     FThread: TThread;
-  end;
+  end;*)
 
   ///<summary>
   ///Имена экспортируемый функций из DLL
@@ -60,7 +64,7 @@ type
 procedure ShowDllExports(const hDll: THandle; OutputList: TStringList);
 
 const
-  RealTasks: array[0..3] of string = ('SearchFiles', 'SearchPattern', 'SearchPattern2', 'ArchiveFolder');
+  RealTasks: array[0..2] of string = ('SearchFiles', 'SearchPattern', (*'SearchPattern2',*) 'ArchiveFolder');
 
 var
   FSearchDLL: THandle;

@@ -212,11 +212,15 @@ var
   SearchPattern: TSearchPattern;
   PatternsArray: TArray<string>;
   Res: Boolean;
-  Results: TArray<Int64>;
+  Results: TSearchResults; //TArray<Int64>;
   TotalMatches: Int64;
   Pattern: string;
 begin
   inherited;
+
+//  FillChar(Results, sizeof(Results), 0);
+  SetLength(Results, 0);
+
   Synchronize(
     procedure
     begin
@@ -226,14 +230,17 @@ begin
   SearchPattern := FAddrFunc;
   try
     PatternsArray := Patterns.Split([';'], TStringSplitOptions.ExcludeEmpty);
+    SetLength(Results, 0);
+
     for Pattern in PatternsArray do
     begin
-      TotalMatches := 10;
+      TotalMatches := 15;
       if not Terminated then
       begin
         Res := SearchPattern(PChar(TargetFile), PChar(Pattern), Results, TotalMatches);
-        if Res then
-        begin
+        if Res then begin
+           SetLength(Results, TotalMatches);
+
           FAddMess := Format('Найдено %s%d вхождений %s' + sLineBreak, [IfThen(TotalMatches < Length(Results), 'более ', ''), Length(Results),
             Pattern]);
           //if Assigned(OnStringReceived) then
@@ -244,7 +251,7 @@ begin
             end);
 
           FAddMess := '';
-          for var j := 0 to Length(Results) - 1 do
+          for var j := 0 to TotalMatches - 1 (*Length(Results) - 1*) do
             FAddMess := FAddMess + IntToStr(Results[j]) + sLineBreak;
           //if Assigned(OnStringReceived) then
           Synchronize(

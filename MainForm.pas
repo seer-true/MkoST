@@ -223,8 +223,8 @@ begin
 
         ThFindFiles.TaskID := cdsTasksID.AsInteger;
 
-      //eFile_s.Text := 'D:\Insures\insures5ase\bin\'; //для тестов
-        eFile_s.Text := 'C:\DataBase\';
+        eFile_s.Text := 'D:\Insures\insures5ase\bin\'; //для тестов
+//        eFile_s.Text := 'C:\DataBase\';
 
         with ThFindFiles do begin
           OnStringReceived := StringReceived;
@@ -249,8 +249,8 @@ begin
         cdsTasksFThread.AsLargeInt := Integer(ThSearchPattern);
         cdsTasks.Post;
 
-      //eFile_s.Text := 'D:\Insures\insures5ase\bin\iRefBooks.rsm'; //для тестов\
-        eFile_s.Text := 'C:\DevelopXE\Declension.7z';
+        eFile_s.Text := 'D:\Insures\insures5ase\bin\iRefBooks.rsm'; //для тестов\
+//        eFile_s.Text := 'C:\DevelopXE\Declension.7z';
 
         with ThSearchPattern do begin
           OnStringReceived := StringReceived;
@@ -404,7 +404,7 @@ end;
 
 procedure TfrmMain.StartArchiveTask;
 var
-  TaskInfo: TTaskInfo;
+//  TaskInfo: TTaskInfo;
   Thread: TThread;
   ArchiveName: string;
 begin
@@ -421,10 +421,10 @@ begin
   AddResult('----------------------------');
 
   //Создаем задачу
-  TaskInfo.Name := 'Архивирование 7-Zip';
+(*  TaskInfo.Name := 'Архивирование 7-Zip';
   TaskInfo.Status := tsWaiting;
   TaskInfo.StartTime := now;
-  TaskInfo.EndTime := 0;
+  TaskInfo.EndTime := 0;*)
   //SetLength(FTasks, Length(FTasks) + 1);
   //FTasks[High(FTasks)] := TaskInfo;
   StatusTask;

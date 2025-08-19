@@ -126,8 +126,7 @@ begin
     end;
     //Формируем результаты в виде строки
     ResultStr := '';
-    for I := 0 to High(Matches) do
-    begin
+    for I := 0 to High(Matches) do begin
       //Добавляем информацию о шаблоне и количестве совпадений
       ResultStr := ResultStr + Matches[I].Pattern + ' : найдено ' + IntToStr(Length(Matches[I].Positions)) + ' вхождений' + #13#10;
       //Добавляем позиции совпадений
@@ -153,7 +152,8 @@ begin
 end;
 {$STACKFRAMES ON}
 
-function SearchPattern(FileName: PChar; Pattern: PChar; var Results: TArray<Int64>; var TotalMatches: Int64): Boolean; stdcall;
+//function SearchPattern(FileName: PChar; Pattern: PChar; var Results: TArray<Int64>; var TotalMatches: Int64): Boolean; stdcall;
+function SearchPattern(FileName: PChar; Pattern: PChar; var Results: TSearchResults; var TotalMatches: Int64): Boolean; stdcall;
 const
   BufferSize = 1024 * 1024; //1MB буфер для чтения файла
 var
@@ -178,36 +178,32 @@ begin
     SetLength(PatternBytes, PatternLen * SizeOf(Char));
     Move(Pattern^, PatternBytes[0], Length(PatternBytes));
     //Инициализация
-    SetLength(Results, 0);
+//SetLength(Results, 0);
     FS := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
     try
       SetLength(Buffer, BufferSize + PatternLen - 1);
       SetLength(PrevBuffer, PatternLen - 1);
       MaxMatches := TotalMatches;
       TotalMatches := 0;
-      SetLength(Results, 0); //Явно инициализируем массив результатов
+//SetLength(Results, 0); //Явно инициализируем массив результатов
       CurrentPos := 0;
       //Чтение файла блоками
-      while True do
-      begin
+      while True do begin
         //Читаем новый блок
         BytesRead := FS.Read(Buffer[0], BufferSize);
         //Если это не первый блок, добавляем конец предыдущего блока
-        if BytesRead < BufferSize then
-        begin
+        if BytesRead < BufferSize then begin
           //Последний блок - сокращаем буфер
           SetLength(Buffer, BytesRead + Length(PrevBuffer));
           Move(PrevBuffer[0], Buffer[BytesRead], Length(PrevBuffer));
         end
-        else
+        else begin
           if Length(PrevBuffer) > 0 then
-          begin
-          //Добавляем конец предыдущего блока к началу текущего
+        //Добавляем конец предыдущего блока к началу текущего
             Move(PrevBuffer[0], Buffer[BytesRead], Length(PrevBuffer));
-          end;
-        //Поиск шаблона в текущем буфере
-        for I := 0 to Length(Buffer) - PatternLen do
-        begin
+        end;
+      //Поиск шаблона в текущем буфере
+        for I := 0 to Length(Buffer) - PatternLen do begin
           Found := True;
           for j := 0 to PatternLen - 1 do
           begin
@@ -219,19 +215,31 @@ begin
           end;
           if Found then begin
             //Найдено совпадение
-            SetLength(Results, Length(Results) + 1); //AV
-            Results[High(Results)] := CurrentPos + I;
+(* SetLength(Results, Length(Results) + 1); //AV
+            Results[High(Results)] := CurrentPos + I; *)
 
+            try
+              if TotalMatches < Length(Results) then
+                Results[TotalMatches] := CurrentPos + I;
+            except
+              on E: Exception do
+                TotalMatches := Length(Results);
+            end;
             Inc(TotalMatches);
-            //Проверяем, не достигли ли максимального количества совпадений
-            if (MaxMatches > 0) and (TotalMatches >= MaxMatches) then
-            begin
-              TotalMatches := TotalMatches - 1;
+
+            if (MaxMatches > 0) and (TotalMatches >= MaxMatches) then begin //Проверяем, не достигли ли максимального количества совпадений
+//TotalMatches := TotalMatches - 1;
               Result := True;
               Break;
             end;
+
           end;
+        end; //for I := 0 to Length(Buffer) - PatternLen do
+        if (MaxMatches > 0) and (TotalMatches >= MaxMatches) then begin //Проверяем, не достигли ли максимального количества совпадений
+          TotalMatches := TotalMatches - 1;
+          Break;
         end;
+
         //Обновляем текущую позицию в файле
         CurrentPos := CurrentPos + BytesRead;
         //Сохраняем конец текущего блока для следующей итерации
@@ -251,7 +259,8 @@ begin
         //Проверяем конец файла
         if BytesRead < BufferSize then
           Break;
-      end;
+      end; //while True do begin
+
       Result := True;
     finally
       FS.Free;
@@ -333,7 +342,7 @@ begin
             //Найдено совпадение
 (* SetLength(Results, Length(Results) + 1); // AV
             Results[High(Results)] := CurrentPos + I; *)
-//            Форматирование Delphi
+//Форматирование Delphi
             Inc(TotalMatches);
             //Проверяем, не достигли ли максимального количества совпадений
             if (MaxMatches > 0) and (TotalMatches >= MaxMatches) then
@@ -385,4 +394,4 @@ begin
   //ReportMemoryLeaksOnShutdown := true; // отслеживание утечек памяти
 {$ENDIF}
 
- end.
+end.
