@@ -73,13 +73,6 @@ object frmMain: TfrmMain
       Height = 13
       Caption = #1055#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1076#1083#1103' '#1087#1086#1080#1089#1082#1072' '#1074' '#1092#1072#1081#1083#1077':'
     end
-    object Label1: TLabel
-      Left = 286
-      Top = 165
-      Width = 198
-      Height = 13
-      Caption = #1052#1072#1082#1089#1080#1084#1072#1083#1100#1085#1086#1077' '#1082#1086#1083#1080#1095#1077#1089#1090#1074#1086' '#1089#1086#1074#1087#1072#1076#1077#1085#1080#1081
-    end
     object btnSelectFolder: TButton
       Left = 8
       Top = 85
@@ -131,21 +124,6 @@ object frmMain: TfrmMain
       TabOrder = 5
       OnClick = btnArchiveClick
     end
-    object cbMatches: TComboBox
-      Left = 504
-      Top = 162
-      Width = 57
-      Height = 21
-      ItemIndex = 0
-      TabOrder = 6
-      Text = '10'
-      OnKeyPress = cbMatchesKeyPress
-      Items.Strings = (
-        '10'
-        '50'
-        '100'
-        '1000')
-    end
   end
   object pTasks: TPanel
     Left = 0
@@ -157,7 +135,7 @@ object frmMain: TfrmMain
     ExplicitWidth = 596
     object bStartTask: TButton
       Left = 9
-      Top = 124
+      Top = 122
       Width = 119
       Height = 25
       Caption = #1047#1072#1087#1091#1089#1082
@@ -188,8 +166,8 @@ object frmMain: TfrmMain
       TitleFont.Style = []
     end
     object b1: TButton
-      Left = 524
-      Top = 122
+      Left = 330
+      Top = 125
       Width = 75
       Height = 25
       Caption = 'b1'
