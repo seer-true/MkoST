@@ -9,11 +9,14 @@ uses
   System.StrUtils,
   System.Math,
   Winapi.Windows,
-  Winapi.Messages;
+  Winapi.Messages,
+  System.Threading;
 
 type
   TStringEvent = procedure(const S: string) of object;
-  TStatusTask = procedure(const TaskIdx: Integer; const Status: Integer) of object;
+
+  TStatusTask = procedure(const TaskIdx: Integer; const Status: TTaskStatus) of object;
+
   TGetPosition = procedure(const PosPatt: Int64) of object;
 
   ///<summary>
@@ -42,34 +45,25 @@ type
     procedure Stop;
   end;
 
-  TThFindFiles = class(TBaseThread)//поиск файлов
+  /// <summary>
+  ///   поиск файлов
+  /// </summary>
+  TThFindFiles = class(TBaseThread)
   protected
     procedure Execute; override;
   public
     StartFolder, Masks: String;
   end;
 
-  TThSearchPattern = class(TBaseThread)//поиск в файле
+  /// <summary>
+  ///   поиск в файле
+  /// </summary>
+  TThSearchPattern = class(TBaseThread)
   protected
     procedure Execute; override;
   public
     TargetFile, Patterns: String;
     Matches: Int64;
-  end;
-
-  TThSearchPattern2 = class(TBaseThread)//поиск в файле
-  protected
-    procedure Execute; override;
-  public
-    OnGetPosition: TGetPosition;
-    TargetFile, Patterns: String;
-  end;
-
-  TThFindInFile = class(TBaseThread)//поиск в файле первый
-  protected
-    procedure Execute; override;
-  public
-    TargetFile, Patterns: String;
   end;
 
 implementation
@@ -114,7 +108,7 @@ begin
   if not Terminated then
   begin
     FAddMess := 'Попытка остановить задачу..';
-    //if Assigned(OnStringReceived) then
+    //if Assigned(OnStringReceived) then // это лучше делать в общем классе
     Synchronize(
       procedure
       begin
@@ -150,22 +144,18 @@ begin
   Synchronize(
     procedure
     begin
-      OnStatusTask(TaskID, Ord(tsRunning));
+      OnStatusTask(TaskID, System.Threading.TTaskStatus.Running);
     end);
 
   SearchFunc := FAddrFunc;
 
   MaskArray := Masks.Split([';'], TStringSplitOptions.ExcludeEmpty);
 
-  for Mask in MaskArray do
-  begin //для каждой маски
-    if not Terminated then
-    begin
+  for Mask in MaskArray do begin //для каждой маски
+    if not Terminated then begin
       Res := SearchFunc(PChar(Mask), PChar(StartFolder), FileCount, FileList);
       //вызов
-      if Res then
-      begin
-
+      if Res then begin
         FAddMess := Format('Найдено %d файлов %s:%s%s%s', [FileCount, Mask, sLineBreak, FileList, sLineBreak]);
         //if Assigned(OnStringReceived) then
         Synchronize(
@@ -176,32 +166,24 @@ begin
       end;
       //FTerminateEvent.WaitFor(500);
     end
-    else
-    begin
-(* Synchronize(
-        procedure
-        begin
-          OnStatusTask(TaskID, Ord(tsCancelled));
-        end); *)
-
+    else begin
       FAddMess := 'Задача остановлена пользователем.';
 // // if Assigned(OnStringReceived) then
       Synchronize(
         procedure
         begin
-          OnStatusTask(TaskID, Ord(tsCancelled));
+          OnStatusTask(TaskID, System.Threading.TTaskStatus.Canceled);
           OnStringReceived(FAddMess);
         end);
       break;
     end;
   end;
 
-  if not Terminated then
-  begin
+  if not Terminated then begin
     Synchronize(
       procedure
       begin
-        OnStatusTask(TaskID, Ord(tsCompleted));
+        OnStatusTask(TaskID, System.Threading.TTaskStatus.Completed);
       end);
     Terminate;
   end
@@ -226,7 +208,7 @@ begin
   Synchronize(
     procedure
     begin
-      OnStatusTask(TaskID, Ord(tsRunning));
+      OnStatusTask(TaskID, System.Threading.TTaskStatus.Running);
     end);
 
   SearchPattern := FAddrFunc;
@@ -241,8 +223,8 @@ begin
 
         if Res then begin
           SetLength(Results, IfThen(TotalMatches > Matches, Matches, TotalMatches)); //уточним
-          FAddMess := Format('Найдено %s%d вхождений "%s"', [IfThen(Matches < TotalMatches, 'более ', ''), IfThen(Matches < TotalMatches, Matches,
-            TotalMatches), Pattern]);
+          FAddMess := Format('Найдено %s%d вхождений "%s" в позициях', [IfThen(Matches < TotalMatches, 'более ', ''),
+            IfThen(Matches < TotalMatches, Matches, TotalMatches), Pattern]);
           //if Assigned(OnStringReceived) then
           Synchronize(
             procedure
@@ -269,14 +251,9 @@ begin
           procedure
           begin
             OnStringReceived(FAddMess);
-            OnStatusTask(TaskID, Ord(tsCancelled));
+            OnStatusTask(TaskID, System.Threading.TTaskStatus.Canceled);
           end);
 
-(* Synchronize(
-          procedure
-          begin
-            OnStatusTask(TaskID, Ord(tsCancelled));
-          end); *)
         break;
       end;
 
@@ -290,122 +267,7 @@ begin
     Synchronize(
       procedure
       begin
-        OnStatusTask(TaskID, Ord(tsCompleted));
-      end);
-    Terminate;
-  end;
-end;
-
-{ TThFindInFile }
-
-procedure TThFindInFile.Execute;
-var
-  SearchFunc: TSearchInFileFunc;
-  PatternsArray: TArray<string>;
-  Pattern: String;
-  Res: Boolean;
-  Results: PChar;
-  TotalMatches: Int64;
-begin
-  inherited;
-  //FTasks[TaskIdx].Status := tsRunning;
-
-  SearchFunc := FAddrFunc;
-  PatternsArray := Patterns.Split([';'], TStringSplitOptions.ExcludeEmpty);
-  for Pattern in PatternsArray do
-  begin
-    if not Terminated then
-    begin
-      Res := SearchFunc(PChar(TargetFile), PChar(Pattern), Results, TotalMatches); //вызов
-      if Res then
-      begin
-        FAddMess := Format('Найдено %d вхождений %s:%s%s%s', [TotalMatches, Pattern, sLineBreak, Results, sLineBreak]);
-        //if Assigned(OnStringReceived) then
-        Synchronize(
-          procedure
-          begin
-            OnStringReceived(FAddMess);
-          end);
-      end;
-    end;
-  end;
-end;
-
-{ TThSearchPattern2 }
-
-procedure TThSearchPattern2.Execute;
-var
-  SearchPattern: TSearchPattern2;
-  PatternsArray: TArray<string>;
-  Res: Boolean;
-  ResPatt: Int64;
-  TotalMatches: Int64;
-  Pattern: string;
-begin
-  inherited;
-  Synchronize(
-    procedure
-    begin
-      OnStatusTask(TaskID, Ord(tsRunning));
-    end);
-
-  SearchPattern := FAddrFunc;
-
-  PatternsArray := Patterns.Split([';'], TStringSplitOptions.ExcludeEmpty);
-  for Pattern in PatternsArray do
-  begin
-    TotalMatches := 10;
-    if not Terminated then
-    begin
-      Res := SearchPattern(PChar(TargetFile), PChar(Pattern), TotalMatches, nil);
-      if Res then
-      begin
-        FAddMess := Format('Найдено %d вхождений %s' + sLineBreak, [TotalMatches, Pattern]);
-          //if Assigned(OnStringReceived) then
-        Synchronize(
-          procedure
-          begin
-            OnStringReceived(FAddMess);
-          end);
-
-(* FAddMess := '';
-          for var j := 0 to Length(Results) - 1 do
-            FAddMess := FAddMess + IntToStr(Results[j]) + sLineBreak;
-          // if Assigned(OnStringReceived) then
-            Synchronize(
-              procedure
-              begin
-                OnStringReceived(FAddMess);
-              end); *)
-      end;
-    end
-    else
-    begin
-      FAddMess := 'Задача остановлена пользователем.';
-// // if Assigned(OnStringReceived) then
-      Synchronize(
-        procedure
-        begin
-          OnStringReceived(FAddMess);
-          OnStatusTask(TaskID, Ord(tsCancelled));
-        end);
-
-(* Synchronize(
-          procedure
-          begin
-            OnStatusTask(TaskID, Ord(tsCancelled));
-          end); *)
-      break;
-    end;
-
-  end;
-
-  if not Terminated then
-  begin
-    Synchronize(
-      procedure
-      begin
-        OnStatusTask(TaskID, Ord(tsCompleted));
+        OnStatusTask(TaskID, System.Threading.TTaskStatus.Completed);
       end);
     Terminate;
   end;

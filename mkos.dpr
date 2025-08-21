@@ -9,11 +9,11 @@ uses
 {$R *.res}
 
 begin
-  Application.Initialize;
-  Application.MainFormOnTaskbar := True;
 {$IFDEF DEBUG}
 //  ReportMemoryLeaksOnShutdown := true; // отслеживание утечек памяти
 {$ENDIF}
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
   Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
 end.
