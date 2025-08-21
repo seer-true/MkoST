@@ -99,7 +99,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>(None)</Manifest_File>
-        <Debugger_HostApplication>C:\DevelopXE\MkoST\OUT\Win32\Debug\mkos.exe</Debugger_HostApplication>
+        <Debugger_HostApplication>\DevelopXE\MKOS\OUT\Win32\Debug\mkos.exe</Debugger_HostApplication>
         <DCC_UnitSearchPath>\DevelopXE\FastMM4;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
