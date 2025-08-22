@@ -2,8 +2,8 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'MKOS - '#1052#1086#1076#1091#1083#1100#1085#1086#1077' '#1087#1088#1080#1083#1086#1078#1077#1085#1080#1077
-  ClientHeight = 504
-  ClientWidth = 600
+  ClientHeight = 592
+  ClientWidth = 653
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,40 +17,46 @@ object frmMain: TfrmMain
   object mResults: TMemo
     Left = 0
     Top = 341
-    Width = 600
-    Height = 122
+    Width = 653
+    Height = 210
     Align = alClient
     ScrollBars = ssBoth
     TabOrder = 0
-    ExplicitTop = 470
-    ExplicitHeight = 113
+    ExplicitWidth = 600
+    ExplicitHeight = 122
   end
   object pLower: TPanel
     Left = 0
-    Top = 463
-    Width = 600
+    Top = 551
+    Width = 653
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 583
+    ExplicitTop = 463
+    ExplicitWidth = 600
+    DesignSize = (
+      653
+      41)
     object btnViewResults: TButton
-      Left = 459
+      Left = 512
       Top = 6
       Width = 120
       Height = 25
+      Anchors = [akTop, akRight]
       Caption = #1054#1095#1080#1089#1090#1080#1090#1100
       TabOrder = 0
       OnClick = btnViewResultsClick
+      ExplicitLeft = 459
     end
   end
   object pTasks: TPanel
     Left = 0
     Top = 186
-    Width = 600
+    Width = 653
     Height = 155
     Align = alTop
     TabOrder = 2
-    ExplicitTop = 191
+    ExplicitWidth = 600
     object bStartTask: TButton
       Left = 1
       Top = 122
@@ -72,7 +78,7 @@ object frmMain: TfrmMain
     object dbgTasks: TDBGrid
       Left = 1
       Top = 1
-      Width = 598
+      Width = 651
       Height = 115
       Align = alTop
       DataSource = dsTask
@@ -90,17 +96,21 @@ object frmMain: TfrmMain
       Height = 25
       Caption = #1040#1088#1093#1080#1074#1080#1088#1086#1074#1072#1090#1100
       TabOrder = 3
+      OnClick = btnArchiveClick
     end
   end
   object grpFindFiles: TGroupBox
     Left = 0
     Top = 0
-    Width = 600
+    Width = 653
     Height = 85
     Align = alTop
     Caption = #1055#1086#1080#1089#1082' '#1092#1072#1081#1083#1086#1074
     TabOrder = 3
-    ExplicitLeft = 8
+    ExplicitWidth = 600
+    DesignSize = (
+      653
+      85)
     object lblMasks: TLabel
       Left = 8
       Top = 34
@@ -109,39 +119,49 @@ object frmMain: TfrmMain
       Caption = #1052#1072#1089#1082#1080' '#1092#1072#1081#1083#1086#1074':'
     end
     object bSelectFolder: TSpeedButton
-      Left = 569
+      Left = 622
       Top = 11
       Width = 23
       Height = 23
       Hint = #1042#1099#1073#1088#1072#1090#1100' '#1082#1072#1090#1072#1083#1086#1075'...'
+      Anchors = [akTop, akRight]
       Caption = #1050
       OnClick = bSelectFolderClick
+      ExplicitLeft = 569
     end
     object eFolder: TEdit
       Left = 8
       Top = 12
-      Width = 555
+      Width = 608
       Height = 21
+      Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       Text = 'D:\DevelopXE\MKOS'
+      ExplicitWidth = 555
     end
     object eMasks: TEdit
       Left = 8
       Top = 53
-      Width = 584
+      Width = 637
       Height = 21
+      Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
       Text = '*.dpr;*.txt;*.pas;*.dfm'
+      ExplicitWidth = 584
     end
   end
   object grpSearchInFile: TGroupBox
     Left = 0
     Top = 85
-    Width = 600
+    Width = 653
     Height = 101
     Align = alTop
     Caption = #1055#1086#1080#1089#1082' '#1074' '#1092#1072#1081#1083#1077
     TabOrder = 4
+    ExplicitWidth = 600
+    DesignSize = (
+      653
+      101)
     object lblSearchInFile: TLabel
       Left = 8
       Top = 48
@@ -150,29 +170,34 @@ object frmMain: TfrmMain
       Caption = #1055#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1076#1083#1103' '#1087#1086#1080#1089#1082#1072' '#1074' '#1092#1072#1081#1083#1077':'
     end
     object bSelectFile: TSpeedButton
-      Left = 570
+      Left = 623
       Top = 20
       Width = 23
       Height = 23
       Hint = #1042#1099#1073#1088#1072#1090#1100' '#1092#1072#1081#1083'...'
+      Anchors = [akTop, akRight]
       Caption = #1060
       OnClick = bSelectFileClick
+      ExplicitLeft = 570
     end
     object eSearchPatterns: TEdit
       Left = 8
       Top = 64
-      Width = 513
+      Width = 566
       Height = 21
+      Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       Text = '25'
       TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
+      ExplicitWidth = 513
     end
     object cbMatches: TComboBox
-      Left = 535
+      Left = 588
       Top = 64
       Width = 57
       Height = 21
       Hint = #1052#1072#1082#1089#1080#1084#1072#1083#1100#1085#1086#1077' '#1082#1086#1083#1080#1095#1077#1089#1090#1074#1086' '#1089#1086#1074#1087#1072#1076#1077#1085#1080#1081
+      Anchors = [akTop, akRight]
       ItemIndex = 0
       TabOrder = 1
       Text = '10'
@@ -182,14 +207,17 @@ object frmMain: TfrmMain
         '50'
         '100'
         '1000')
+      ExplicitLeft = 535
     end
     object eFile: TEdit
       Left = 9
       Top = 21
-      Width = 555
+      Width = 608
       Height = 21
+      Anchors = [akLeft, akTop, akRight]
       TabOrder = 2
       Text = 'D:\DevelopXE\MKOS\Arch7zip.dpr'
+      ExplicitWidth = 555
     end
   end
   object OpenDialog: TFileOpenDialog
@@ -200,7 +228,7 @@ object frmMain: TfrmMain
         FileMask = '*.*'
       end>
     Options = [fdoPickFolders]
-    Left = 348
+    Left = 373
     Top = 8
   end
   object cdsTasks: TClientDataSet
@@ -248,7 +276,7 @@ object frmMain: TfrmMain
     Top = 366
   end
   object FileOpenDialog: TOpenTextFileDialog
-    Left = 435
-    Top = 265
+    Left = 520
+    Top = 105
   end
 end

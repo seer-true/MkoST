@@ -113,7 +113,7 @@ begin
         CurrentPos := CurrentPos + BytesRead; //текущая позицию в файле
 
         if BytesRead > 0 then begin //конец текущего блока для следующей итерации
-          SetLength(PrevBuffer, PatternLen - 1);
+          SetLength(PrevBuffer, PatternLen (*- 1*));
           if BytesRead >= PatternLen - 1 then
             Move(Buffer[BytesRead - (PatternLen - 1)], PrevBuffer[0], Length(PrevBuffer))
           else

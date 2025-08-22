@@ -18,6 +18,28 @@ type
 const
   SevenZipPath = 'C:\Program Files\7-Zip\7z.exe'; //Стандартный путь, можно изменить
 
+var
+  ArchStopEvent: THandle = 0;
+
+procedure StopArchiving; stdcall;
+begin
+  if ArchStopEvent <> 0 then
+    SetEvent(ArchStopEvent); // Сигнализируем о необходимости остановки
+end;
+
+function InitArchiving: Boolean; stdcall;
+begin
+  // Создаем именованное событие для остановки
+  ArchStopEvent := CreateEvent(
+    nil,               // Атрибуты безопасности (по умолчанию)
+    True,              // Ручной сброс (Manual Reset)
+    False,             // Начальное состояние (не сигнализировано)
+    'Global\7zArchiverStopEvent' // Имя события (Global - для всех сессий)
+  );
+  Result := (ArchStopEvent <> 0);
+end;
+
+
 //Основная функция архивации
 function ArchiveFolder(FolderPath, ArchiveName: PChar; Callback: TLogCallback): Boolean; stdcall;
 var
@@ -35,8 +57,7 @@ begin
   if not Assigned(Callback) then
     Exit;
 
-  if not FileExists(SevenZipPath) then
-  begin
+  if not FileExists(SevenZipPath) then begin
     Callback(PChar('Ошибка: 7-Zip не найден по пути ' + SevenZipPath));
     Exit;
   end;
@@ -46,8 +67,7 @@ begin
   SecAttr.lpSecurityDescriptor := nil;
   SecAttr.bInheritHandle := True;
 
-  if not CreatePipe(hReadPipe, hWritePipe, @SecAttr, 0) then
-  begin
+  if not CreatePipe(hReadPipe, hWritePipe, @SecAttr, 0) then begin
     Callback(PChar('Ошибка создания канала'));
     Exit;
   end;
@@ -57,21 +77,27 @@ begin
     CmdLine := Format('"%s" a -tzip -bb3 "%s" "%s\*"', [SevenZipPath, string(ArchiveName), string(FolderPath)]);
 
     FillChar(StartupInfo, SizeOf(TStartupInfo), 0);
+//StartupInfo := Default(TStartupInfo);
     StartupInfo.cb := SizeOf(TStartupInfo);
     StartupInfo.dwFlags := STARTF_USESHOWWINDOW or STARTF_USESTDHANDLES;
     StartupInfo.wShowWindow := SW_HIDE;
     StartupInfo.hStdOutput := hWritePipe;
     StartupInfo.hStdError := hWritePipe;
 
-    if CreateProcess(nil, PChar(CmdLine), nil, nil, True, CREATE_NO_WINDOW, nil, nil, StartupInfo, ProcessInfo) then begin
+    if CreateProcess(PChar(SevenZipPath), PChar(CmdLine), nil, nil, True, CREATE_NO_WINDOW, nil, nil, StartupInfo, ProcessInfo) then begin
       try
         CloseHandle(hWritePipe);
         Callback(PChar('Начато архивирование: ' + string(FolderPath)));
-
-        while True do
-        begin
-          if not ReadFile(hReadPipe, Buffer, SizeOf(Buffer) - 1, BytesRead, nil) or (BytesRead = 0) then
+// событие остановки
+        while True do begin
+          if WaitForSingleObject(ArchStopEvent, 100) = WAIT_OBJECT_0 then
           begin
+            Callback('Получен сигнал остановки...');
+            TerminateProcess(ProcessInfo.hProcess, 0);
+            Break;
+          end;
+
+          if not ReadFile(hReadPipe, Buffer, SizeOf(Buffer) - 1, BytesRead, nil) or (BytesRead = 0) then begin
             if WaitForSingleObject(ProcessInfo.hProcess, 100) <> WAIT_TIMEOUT then
               Break;
             Continue;
@@ -80,8 +106,8 @@ begin
           Buffer[BytesRead] := #0;
           Output := string(AnsiString(Buffer));
 
-          //Анализируем вывод 7-Zip для определения текущего файла
-          if Pos('U', Output) = 1 then begin //Строка начинается с "+ " - это информация о файле???
+//текущеий файл
+          if Pos('+ ', Output) = 1 then begin //Строка начинается с "+ " - это информация о файле???
             LastFile := Trim(Copy(Output, 3, MaxInt));
             Callback(PChar('Обработка файла: ' + LastFile));
           end
@@ -89,10 +115,23 @@ begin
             if Trim(Output) <> '' then begin
               Callback(PChar(Output));
             end;
-        end;
 
-        Callback(PChar('Архивирование завершено: ' + string(ArchiveName)));
-        Result := True;
+//ArchStop := True;
+          if ArchStop then
+          begin
+            TerminateProcess(ProcessInfo.hProcess, 0);
+            Break;
+          end
+
+        end; //while
+
+        if ArchStop then begin
+          Callback(PChar('Архивирование прервано'));
+        end
+        else begin
+          Callback(PChar('Архивирование завершено: ' + string(ArchiveName)));
+          Result := True;
+        end;
       finally
         CloseHandle(ProcessInfo.hThread);
         CloseHandle(ProcessInfo.hProcess);

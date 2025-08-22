@@ -22,10 +22,11 @@ type
   TSearchFilesFunc = function(Masks: PChar; StartDir: PChar; var FileCount: Integer; var FileList: WideString): Boolean; stdcall;
 //  TSearchInFileFunc = function(FileName: PChar; Patterns: PChar; out Results: PChar; out TotalMatches: Int64): Boolean stdcall;
   TSearchPattern = function(FileName: PChar; Pattern: PChar; var Results: TSearchResults; var TotalMatches: Int64): Boolean; stdcall;
-  TSearchCallback = procedure(Msg: PChar) of object; stdcall;
+//  TSearchCallback = procedure(Msg: PChar) of object; stdcall;
 //  TSearchPattern2 = function(FileName: PChar; Pattern: PChar; var TotalMatches: Int64; SearchCallback: TSearchCallback): Boolean; stdcall;
 //  TLogCallback = procedure(Msg: PChar) of object; stdcall;
   TArchiveFolderFunc = function(FolderPath, ArchiveName: PChar; LogCallback: Pointer (* TLogCallback *) ): Boolean; stdcall;
+  TStopArchivingProc = procedure; stdcall;
 
   ///<summary>
   ///Имена экспортируемый функций из DLL
@@ -38,6 +39,7 @@ const
 var
   FSearchDLL: THandle;
   F7ZipDLL: THandle;
+  ArchStop: Boolean = False;
 
 implementation
 
