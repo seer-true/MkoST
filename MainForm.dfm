@@ -22,8 +22,6 @@ object frmMain: TfrmMain
     Align = alClient
     ScrollBars = ssBoth
     TabOrder = 0
-    ExplicitWidth = 600
-    ExplicitHeight = 122
   end
   object pLower: TPanel
     Left = 0
@@ -32,8 +30,6 @@ object frmMain: TfrmMain
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 463
-    ExplicitWidth = 600
     DesignSize = (
       653
       41)
@@ -46,7 +42,6 @@ object frmMain: TfrmMain
       Caption = #1054#1095#1080#1089#1090#1080#1090#1100
       TabOrder = 0
       OnClick = btnViewResultsClick
-      ExplicitLeft = 459
     end
   end
   object pTasks: TPanel
@@ -56,7 +51,6 @@ object frmMain: TfrmMain
     Height = 155
     Align = alTop
     TabOrder = 2
-    ExplicitWidth = 600
     object bStartTask: TButton
       Left = 1
       Top = 122
@@ -90,7 +84,7 @@ object frmMain: TfrmMain
       TitleFont.Style = []
     end
     object btnArchive: TButton
-      Left = 333
+      Left = 328
       Top = 122
       Width = 120
       Height = 25
@@ -107,7 +101,6 @@ object frmMain: TfrmMain
     Align = alTop
     Caption = #1055#1086#1080#1089#1082' '#1092#1072#1081#1083#1086#1074
     TabOrder = 3
-    ExplicitWidth = 600
     DesignSize = (
       653
       85)
@@ -137,7 +130,6 @@ object frmMain: TfrmMain
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       Text = 'D:\DevelopXE\MKOS'
-      ExplicitWidth = 555
     end
     object eMasks: TEdit
       Left = 8
@@ -147,7 +139,6 @@ object frmMain: TfrmMain
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
       Text = '*.dpr;*.txt;*.pas;*.dfm'
-      ExplicitWidth = 584
     end
   end
   object grpSearchInFile: TGroupBox
@@ -158,7 +149,6 @@ object frmMain: TfrmMain
     Align = alTop
     Caption = #1055#1086#1080#1089#1082' '#1074' '#1092#1072#1081#1083#1077
     TabOrder = 4
-    ExplicitWidth = 600
     DesignSize = (
       653
       101)
@@ -189,7 +179,6 @@ object frmMain: TfrmMain
       TabOrder = 0
       Text = '25'
       TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
-      ExplicitWidth = 513
     end
     object cbMatches: TComboBox
       Left = 588
@@ -207,7 +196,6 @@ object frmMain: TfrmMain
         '50'
         '100'
         '1000')
-      ExplicitLeft = 535
     end
     object eFile: TEdit
       Left = 9
@@ -217,7 +205,6 @@ object frmMain: TfrmMain
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 2
       Text = 'D:\DevelopXE\MKOS\Arch7zip.dpr'
-      ExplicitWidth = 555
     end
   end
   object OpenDialog: TFileOpenDialog

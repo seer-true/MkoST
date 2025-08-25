@@ -72,7 +72,7 @@ type
 
     procedure StringReceived(const S: string);
 
-    procedure StatusTask(const TaskIdx: integer; const Status: TTaskStatus = System.Threading.TTaskStatus.Created);
+    procedure StatusTask(const TaskIdx: integer; const Status: TTaskStatus(* = System.Threading.TTaskStatus.Created*));
 
     procedure LoadSevenZipDLL;
     procedure UnloadSevenZipDLL;
@@ -85,7 +85,7 @@ type
     ThSearchPattern: TThSearchPattern;
 
     ArchTask: ITask;
-    StopArchiving: TStopArchivingProc;
+//    StopArchiving: TStopArchivingProc;
 
     destructor Destroy; override;
     procedure StartArchiveTask;
@@ -117,8 +117,8 @@ begin
       frmMain.StringReceived(string(Msg));
       if Assigned(frmMain.ArchTask) then
         if frmMain.ArchTask.Status = TTaskStatus.Running then begin
-          ArchStop := True;
-          frmMain.mResults.Lines.Add('ArchStop := ' + BoolToStr(ArchStop, True));
+//          ArchStop := True;
+//          frmMain.mResults.Lines.Add('ArchStop := ' + BoolToStr(ArchStop, True));
         end;
     end);
 end;
@@ -178,7 +178,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.StatusTask(const TaskIdx: integer; const Status: TTaskStatus = System.Threading.TTaskStatus.Created);
+procedure TfrmMain.StatusTask(const TaskIdx: integer; const Status: TTaskStatus(* = System.Threading.TTaskStatus.Created*));
 begin
   try
     if cdsTasks.Locate('ID', Ord(TaskIdx), []) then begin
@@ -312,7 +312,7 @@ begin
         //Получаем функцию из DLL
 
                 ArchiveFunc := GetProcAddress(F7ZipDLL, 'ArchiveFolder');
-                StopArchiving := GetProcAddress(F7ZipDLL, 'StopArchiving');
+//                StopArchiving := GetProcAddress(F7ZipDLL, 'StopArchiving');
 
                 if not Assigned(ArchiveFunc) then
                   raise Exception.Create('Функция ArchiveFolder не найдена в DLL');
@@ -385,8 +385,8 @@ begin
       if Assigned(ArchTask) then
         if ArchTask.Status = TTaskStatus.Running then begin
           ArchTask.Cancel;
-          ArchStop := True;
-          StopArchiving;
+//          ArchStop := True;
+//          StopArchiving;
           mResults.Lines.Add('ArchStop := True');
         end;
   end;
