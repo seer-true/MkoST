@@ -12,7 +12,6 @@ object frmMain: TfrmMain
   Font.Style = []
   ShowHint = True
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object mResults: TMemo
     Left = 0
@@ -22,6 +21,8 @@ object frmMain: TfrmMain
     Align = alClient
     ScrollBars = ssBoth
     TabOrder = 0
+    ExplicitWidth = 649
+    ExplicitHeight = 209
   end
   object pLower: TPanel
     Left = 0
@@ -30,6 +31,8 @@ object frmMain: TfrmMain
     Height = 41
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 550
+    ExplicitWidth = 649
     DesignSize = (
       653
       41)
@@ -42,6 +45,7 @@ object frmMain: TfrmMain
       Caption = #1054#1095#1080#1089#1090#1080#1090#1100
       TabOrder = 0
       OnClick = btnViewResultsClick
+      ExplicitLeft = 508
     end
   end
   object pTasks: TPanel
@@ -51,8 +55,7 @@ object frmMain: TfrmMain
     Height = 155
     Align = alTop
     TabOrder = 2
-    ExplicitLeft = -8
-    ExplicitTop = 192
+    ExplicitWidth = 649
     object bStartTask: TButton
       Left = 1
       Top = 122
@@ -94,6 +97,7 @@ object frmMain: TfrmMain
     Align = alTop
     Caption = #1055#1086#1080#1089#1082' '#1092#1072#1081#1083#1086#1074
     TabOrder = 3
+    ExplicitWidth = 649
     DesignSize = (
       653
       85)
@@ -117,13 +121,12 @@ object frmMain: TfrmMain
     end
     object eFolder: TEdit
       Left = 8
-      Top = 12
+      Top = 13
       Width = 608
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
-      Text = 'D:\DevelopXE\MKOS'
-      TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
+      TextHint = #1059#1082#1072#1078#1080#1090#1077' '#1082#1072#1090#1072#1083#1086#1075' '#1076#1083#1103' '#1087#1086#1080#1089#1082#1072' '#1092#1072#1081#1083#1086#1074
     end
     object eMasks: TEdit
       Left = 13
@@ -133,8 +136,8 @@ object frmMain: TfrmMain
       Hint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
-      Text = '*.dpr;*.txt;*.pas;*.dfm'
       TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1084#1072#1089#1082#1080' '#1076#1083#1103' '#1087#1088#1089#1080#1082#1072' '#1092#1072#1081#1083#1086#1074' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': *.dpr;*.txt)'
+      ExplicitWidth = 633
     end
   end
   object grpSearchInFile: TGroupBox
@@ -145,7 +148,7 @@ object frmMain: TfrmMain
     Align = alTop
     Caption = #1055#1086#1080#1089#1082' '#1074' '#1092#1072#1081#1083#1077
     TabOrder = 4
-    ExplicitTop = 91
+    ExplicitWidth = 649
     DesignSize = (
       653
       101)
@@ -175,8 +178,8 @@ object frmMain: TfrmMain
       Hint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
-      Text = '25'
       TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
+      ExplicitWidth = 562
     end
     object cbMatches: TComboBox
       Left = 588
@@ -194,6 +197,7 @@ object frmMain: TfrmMain
         '50'
         '100'
         '1000')
+      ExplicitLeft = 584
     end
     object eFile: TEdit
       Left = 9
@@ -202,7 +206,8 @@ object frmMain: TfrmMain
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 2
-      Text = 'D:\DevelopXE\MKOS\mkos.res'
+      TextHint = #1059#1082#1072#1078#1080#1090#1077' '#1092#1072#1081#1083' '#1076#1083#1103' '#1087#1086#1080#1089#1082#1072' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1077#1081
+      ExplicitWidth = 604
     end
   end
   object OpenDialog: TFileOpenDialog

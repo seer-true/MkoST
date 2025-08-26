@@ -58,21 +58,6 @@ type
     Matches: Int64;
   end;
 
-  TThSearchPattern2 = class(TBaseThread)//поиск в файле
-  protected
-    procedure Execute; override;
-  public
-    OnGetPosition: TGetPosition;
-    TargetFile, Patterns: String;
-  end;
-
-  TThFindInFile = class(TBaseThread)//поиск в файле первый
-  protected
-    procedure Execute; override;
-  public
-    TargetFile, Patterns: String;
-  end;
-
 implementation
 
 uses
@@ -264,103 +249,6 @@ begin
     end;
   finally
     SetLength(Results, 0);
-  end;
-
-  if not Terminated then
-  begin
-    Synchronize(
-      procedure
-      begin
-        OnStatusTask(TaskID, System.Threading.TTaskStatus.Completed);
-      end);
-    Terminate;
-  end;
-end;
-
-{ TThFindInFile }
-
-procedure TThFindInFile.Execute;
-var
-  SearchFunc: TSearchInFileFunc;
-  PatternsArray: TArray<string>;
-  Pattern: String;
-  Res: Boolean;
-  Results: PChar;
-  TotalMatches: Int64;
-begin
-  inherited;
-  //FTasks[TaskIdx].Status := tsRunning;
-
-  SearchFunc := FAddrFunc;
-  PatternsArray := Patterns.Split([';'], TStringSplitOptions.ExcludeEmpty);
-  for Pattern in PatternsArray do
-  begin
-    if not Terminated then
-    begin
-      Res := SearchFunc(PChar(TargetFile), PChar(Pattern), Results, TotalMatches); //вызов
-      if Res then
-      begin
-        FAddMess := Format('Найдено %d вхождений %s:%s%s%s', [TotalMatches, Pattern, sLineBreak, Results, sLineBreak]);
-        Synchronize(
-          procedure
-          begin
-            OnStringReceived(FAddMess);
-          end);
-      end;
-    end;
-  end;
-end;
-
-{ TThSearchPattern2 }
-
-procedure TThSearchPattern2.Execute;
-var
-  SearchPattern: TSearchPattern2;
-  PatternsArray: TArray<string>;
-  Res: Boolean;
-  ResPatt: Int64;
-  TotalMatches: Int64;
-  Pattern: string;
-begin
-  inherited;
-  Synchronize(
-    procedure
-    begin
-      OnStatusTask(TaskID, System.Threading.TTaskStatus.Running);
-    end);
-
-  SearchPattern := FAddrFunc;
-
-  PatternsArray := Patterns.Split([';'], TStringSplitOptions.ExcludeEmpty);
-  for Pattern in PatternsArray do
-  begin
-    TotalMatches := 10;
-    if not Terminated then
-    begin
-      Res := SearchPattern(PChar(TargetFile), PChar(Pattern), TotalMatches, nil);
-      if Res then
-      begin
-        FAddMess := Format('Найдено %d вхождений %s' + sLineBreak, [TotalMatches, Pattern]);
-        Synchronize(
-          procedure
-          begin
-            OnStringReceived(FAddMess);
-          end);
-      end;
-    end
-    else
-    begin
-      FAddMess := 'Задача остановлена пользователем.';
-      Synchronize(
-        procedure
-        begin
-          OnStringReceived(FAddMess);
-          OnStatusTask(TaskID, System.Threading.TTaskStatus.Canceled);
-        end);
-
-      break;
-    end;
-
   end;
 
   if not Terminated then
