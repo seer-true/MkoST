@@ -158,35 +158,24 @@ begin
 
   MaskArray := Masks.Split([';'], TStringSplitOptions.ExcludeEmpty);
 
-  for Mask in MaskArray do
-  begin //для каждой маски
+  for Mask in MaskArray do begin //для каждой маски
     if not Terminated then
     begin
-      Res := SearchFunc(PChar(Mask), PChar(StartFolder), FileCount, FileList);
-      //вызов
+      Res := SearchFunc(PChar(Mask), PChar(StartFolder), FileCount, FileList); //ызов
       if Res then
       begin
-
         FAddMess := Format('Найдено %d файлов %s:%s%s%s', [FileCount, Mask, sLineBreak, FileList, sLineBreak]);
-        //if Assigned(OnStringReceived) then
         Synchronize(
           procedure
           begin
             OnStringReceived(FAddMess);
           end);
       end;
-      //FTerminateEvent.WaitFor(500);
+      FTerminateEvent.WaitFor(500);
     end
     else
     begin
-(* Synchronize(
-        procedure
-        begin
-          OnStatusTask(TaskID, Ord(tsCancelled));
-        end); *)
-
       FAddMess := 'Задача остановлена пользователем.';
-// // if Assigned(OnStringReceived) then
       Synchronize(
         procedure
         begin
@@ -215,13 +204,12 @@ var
   SearchPattern: TSearchPattern;
   PatternsArray: TArray<string>;
   Res: Boolean;
-  Results: TSearchResults; //TArray<Int64>;
+  Results: TSearchResults;
   TotalMatches: Int64;
   Pattern: string;
 begin
   inherited;
 
-//FillChar(Results, sizeof(Results), 0);
   SetLength(Results, 0);
 
   Synchronize(
@@ -244,7 +232,6 @@ begin
           SetLength(Results, IfThen(TotalMatches > Matches, Matches, TotalMatches)); //уточним
           FAddMess := Format('Найдено %s%d вхождений "%s"', [IfThen(Matches < TotalMatches, 'более ', ''), IfThen(Matches < TotalMatches, Matches,
             TotalMatches), Pattern]);
-          //if Assigned(OnStringReceived) then
           Synchronize(
             procedure
             begin
@@ -254,7 +241,6 @@ begin
           FAddMess := '';
           for var j := 0 to Length(Results) - 1 do
             FAddMess := FAddMess + Format('%d. %d %s', [j + 1, Results[j], sLineBreak]);
-          //if Assigned(OnStringReceived) then
           Synchronize(
             procedure
             begin
@@ -265,7 +251,6 @@ begin
       else
       begin
         FAddMess := 'Задача остановлена пользователем.';
-// // if Assigned(OnStringReceived) then
         Synchronize(
           procedure
           begin
@@ -273,11 +258,6 @@ begin
             OnStatusTask(TaskID, System.Threading.TTaskStatus.Canceled);
           end);
 
-(* Synchronize(
-          procedure
-          begin
-            OnStatusTask(TaskID, Ord(tsCancelled));
-          end); *)
         break;
       end;
 
@@ -321,7 +301,6 @@ begin
       if Res then
       begin
         FAddMess := Format('Найдено %d вхождений %s:%s%s%s', [TotalMatches, Pattern, sLineBreak, Results, sLineBreak]);
-        //if Assigned(OnStringReceived) then
         Synchronize(
           procedure
           begin
@@ -362,28 +341,16 @@ begin
       if Res then
       begin
         FAddMess := Format('Найдено %d вхождений %s' + sLineBreak, [TotalMatches, Pattern]);
-          //if Assigned(OnStringReceived) then
         Synchronize(
           procedure
           begin
             OnStringReceived(FAddMess);
           end);
-
-(* FAddMess := '';
-          for var j := 0 to Length(Results) - 1 do
-            FAddMess := FAddMess + IntToStr(Results[j]) + sLineBreak;
-          // if Assigned(OnStringReceived) then
-            Synchronize(
-              procedure
-              begin
-                OnStringReceived(FAddMess);
-              end); *)
       end;
     end
     else
     begin
       FAddMess := 'Задача остановлена пользователем.';
-// // if Assigned(OnStringReceived) then
       Synchronize(
         procedure
         begin
@@ -391,11 +358,6 @@ begin
           OnStatusTask(TaskID, System.Threading.TTaskStatus.Canceled);
         end);
 
-(* Synchronize(
-          procedure
-          begin
-            OnStatusTask(TaskID, Ord(tsCancelled));
-          end); *)
       break;
     end;
 

@@ -51,6 +51,8 @@ object frmMain: TfrmMain
     Height = 155
     Align = alTop
     TabOrder = 2
+    ExplicitLeft = -8
+    ExplicitTop = 192
     object bStartTask: TButton
       Left = 1
       Top = 122
@@ -82,15 +84,6 @@ object frmMain: TfrmMain
       TitleFont.Height = -11
       TitleFont.Name = 'Tahoma'
       TitleFont.Style = []
-    end
-    object btnArchive: TButton
-      Left = 328
-      Top = 122
-      Width = 120
-      Height = 25
-      Caption = #1040#1088#1093#1080#1074#1080#1088#1086#1074#1072#1090#1100
-      TabOrder = 3
-      OnClick = btnArchiveClick
     end
   end
   object grpFindFiles: TGroupBox
@@ -130,15 +123,18 @@ object frmMain: TfrmMain
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       Text = 'D:\DevelopXE\MKOS'
+      TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
     end
     object eMasks: TEdit
-      Left = 8
+      Left = 13
       Top = 53
       Width = 637
       Height = 21
+      Hint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
       Text = '*.dpr;*.txt;*.pas;*.dfm'
+      TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1084#1072#1089#1082#1080' '#1076#1083#1103' '#1087#1088#1089#1080#1082#1072' '#1092#1072#1081#1083#1086#1074' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': *.dpr;*.txt)'
     end
   end
   object grpSearchInFile: TGroupBox
@@ -149,6 +145,7 @@ object frmMain: TfrmMain
     Align = alTop
     Caption = #1055#1086#1080#1089#1082' '#1074' '#1092#1072#1081#1083#1077
     TabOrder = 4
+    ExplicitTop = 91
     DesignSize = (
       653
       101)
@@ -175,6 +172,7 @@ object frmMain: TfrmMain
       Top = 64
       Width = 566
       Height = 21
+      Hint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       Text = '25'
@@ -204,7 +202,7 @@ object frmMain: TfrmMain
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 2
-      Text = 'D:\DevelopXE\MKOS\Arch7zip.dpr'
+      Text = 'D:\DevelopXE\MKOS\mkos.res'
     end
   end
   object OpenDialog: TFileOpenDialog
@@ -215,14 +213,21 @@ object frmMain: TfrmMain
         FileMask = '*.*'
       end>
     Options = [fdoPickFolders]
-    Left = 373
+    Left = 578
     Top = 8
   end
   object cdsTasks: TClientDataSet
+    PersistDataPacket.Data = {
+      7F0000009619E0BD0100000018000000060000000000030000007F0002494404
+      00010000000000045461736B0100490000000100055749445448020002001400
+      0653746174757302000100000000000954696D65537461727408000800000000
+      000754696D65456E640800080000000000074654687265616408000100000000
+      000000}
+    Active = True
     Aggregates = <>
     Params = <>
     OnCalcFields = cdsTasksCalcFields
-    Left = 505
+    Left = 480
     Top = 366
     object cdsTasksID: TIntegerField
       DisplayWidth = 10
@@ -235,6 +240,7 @@ object frmMain: TfrmMain
     end
     object cdsTasksStatus: TSmallintField
       FieldName = 'Status'
+      Visible = False
     end
     object cdsTasksSStatus: TStringField
       DisplayLabel = #1057#1090#1072#1090#1091#1089
@@ -245,16 +251,19 @@ object frmMain: TfrmMain
     end
     object cdsTasksTimeStart: TDateTimeField
       DisplayLabel = #1053#1072#1095#1072#1083#1086
-      DisplayWidth = 13
+      DisplayWidth = 22
       FieldName = 'TimeStart'
+      DisplayFormat = 'dd.mm.yy h:n:s.z'
     end
     object cdsTasksTimeEnd: TDateTimeField
       DisplayLabel = #1047#1072#1074#1077#1088#1096#1077#1085#1080#1077
-      DisplayWidth = 15
+      DisplayWidth = 21
       FieldName = 'TimeEnd'
+      DisplayFormat = 'dd.mm.yy h:n:s.z'
     end
     object cdsTasksFThread: TLargeintField
       FieldName = 'FThread'
+      Visible = False
     end
   end
   object dsTask: TDataSource
@@ -263,7 +272,7 @@ object frmMain: TfrmMain
     Top = 366
   end
   object FileOpenDialog: TOpenTextFileDialog
-    Left = 520
+    Left = 580
     Top = 105
   end
 end

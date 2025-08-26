@@ -1,24 +1,19 @@
 unit CommonMkos;
-
 interface
-
 uses
   WinApi.Windows,
   System.Classes,
   System.SysUtils,
   TasksFunc;
-
 type
   TSearchResult = record
     Pattern: string;
     Positions: TArray<Int64>;
   end;
-
   // TSearchResults = array of TSearchResult;
   // TSearchResults = array[0..999] of Int64;
   // TSearchResults = array of Int64;
   TSearchResults = TArray<Int64>;
-
   /// <summary>
   /// Тип функции поска файлов в DLL
   /// </summary>
@@ -27,37 +22,23 @@ type
   // TSearchPattern = function(FileName: PChar; Pattern: PChar; var Results: TArray<Int64>; var TotalMatches: Int64): Boolean; stdcall;
   TSearchPattern = function(FileName: PChar; Pattern: PChar; var Results: TSearchResults; var TotalMatches: Int64): Boolean; stdcall;
   TSearchCallback = procedure(Msg: PChar) of object; stdcall;
-
   TSearchPattern2 = function(FileName: PChar; Pattern: PChar; var TotalMatches: Int64; SearchCallback: TSearchCallback): Boolean; stdcall;
   TLogCallback = procedure(Msg: PChar) of object; stdcall;
   TArchiveFolderFunc = function(FolderPath, ArchiveName: PChar; LogCallback: Pointer (* TLogCallback *) ): Boolean; stdcall;
-
-  /// <summary>
-  /// Статусы задачи
-  /// </summary>
-  ///
-(*  TTaskStatus = (tsWaiting = 0, // Ожидание
-    tsRunning, // Выполняется
-    tsCompleted, // Отменено
-    tsError, // Ошибка
-    tsCancelled); // Завершено*)
+  TStopArchivingProc = procedure; stdcall;
 
   /// <summary>
   /// Имена экспортируемый функций из DLL
   /// </summary>
 procedure ShowDllExports(const hDll: THandle; OutputList: TStringList);
-
 const
   RealTasks: array [0 .. 2] of string = ('SearchFiles', 'SearchPattern', (* 'SearchPattern2', *) 'ArchiveFolder');
-
 var
   FSearchDLL: THandle;
   F7ZipDLL: THandle;
   FCancelled: Boolean;
-
   // FTasks: TArray<TTaskInfo>; // массив задач
 implementation
-
 procedure ShowDllExports(const hDll: THandle; OutputList: TStringList);
 var
   pExportDir: PImageExportDirectory;
@@ -72,14 +53,11 @@ var
 begin
   DllBase := Pointer(hDll);
   DosHeader := DllBase;
-
   if DosHeader^.e_magic <> IMAGE_DOS_SIGNATURE then
     raise Exception.Create('Неверный формат PE-файла');
-
   NTHeader := PImageNtHeaders(PByte(DllBase) + DosHeader^._lfanew);
   if NTHeader^.Signature <> IMAGE_NT_SIGNATURE then
     raise Exception.Create('Неверная сигнатура PE-файла');
-
   pExportDir := PImageExportDirectory(PByte(DllBase) + NTHeader^.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress);
   if Assigned(pExportDir) then begin
     pNameRVAs := PDWORD(PByte(DllBase) + pExportDir^.AddressOfNames);
@@ -92,7 +70,5 @@ begin
       Inc(pNameRVAs);
     end;
   end;
-
 end;
-
 end.

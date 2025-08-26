@@ -43,7 +43,6 @@ type
     dbgTasks: TDBGrid;
     cdsTasksSStatus: TStringField;
     cdsTasksFThread: TLargeintField;
-    btnArchive: TButton;
     FileOpenDialog: TOpenTextFileDialog;
     grpFindFiles: TGroupBox;
     lblMasks: TLabel;
@@ -66,29 +65,23 @@ type
     procedure cbMatchesKeyPress(Sender: TObject; var Key: Char);
     procedure bSelectFolderClick(Sender: TObject);
     procedure bSelectFileClick(Sender: TObject);
-    procedure btnArchiveClick(Sender: TObject);
   private
-//FPosPatt: TArray<Int64>;
-
     procedure StringReceived(const S: string);
-
-    procedure StatusTask(const TaskIdx: integer; const Status: TTaskStatus(* = System.Threading.TTaskStatus.Created*));
+    procedure StatusTask(const TaskIdx: integer; const Status: TTaskStatus = System.Threading.TTaskStatus.Created);
 
     procedure LoadSevenZipDLL;
     procedure UnloadSevenZipDLL;
     procedure LoadSearchDLL;
     procedure UnloadSearchDLL;
   public
-    (* FSearchDLL: THandle;
-      F7ZipDLL: THandle; *)
     ThFindFiles: TThFindFiles;
     ThSearchPattern: TThSearchPattern;
 
     ArchTask: ITask;
-//    StopArchiving: TStopArchivingProc;
+    ArchiveFunc: TArchiveFolderFunc;
+    StopArchiving: TStopArchivingProc;
 
     destructor Destroy; override;
-    procedure StartArchiveTask;
   end;
 
 var
@@ -115,11 +108,6 @@ begin
     procedure
     begin
       frmMain.StringReceived(string(Msg));
-      if Assigned(frmMain.ArchTask) then
-        if frmMain.ArchTask.Status = TTaskStatus.Running then begin
-//          ArchStop := True;
-//          frmMain.mResults.Lines.Add('ArchStop := ' + BoolToStr(ArchStop, True));
-        end;
     end);
 end;
 
@@ -130,7 +118,7 @@ begin
   LoadSearchDLL;
   LoadSevenZipDLL;
   ListTasks := TStringList.Create;
-  cdsTasks.CreateDataSet;
+//cdsTasks.CreateDataSet;
   cdsTasks.Open;
   try
     //поисковая DLL
@@ -143,13 +131,13 @@ begin
     ListTasks.Clear;
     //архивирующая DLL
     ShowDllExports(F7ZipDLL, ListTasks);
-    for var i := Low(RealTasks) to High(RealTasks) do begin
+    for var i := 0 to Length(RealTasks) - 1 do begin
       if ListTasks.IndexOf(RealTasks[i]) >= 0 then begin
         cdsTasks.InsertRecord([i, RealTasks[i], 0, null, null]);
       end;
     end;
 
-    eFolder.Text := GetCurrentDir; //ExtractFilePath(ParamStr(0));
+    eFolder.Text := GetCurrentDir;
   finally
     ListTasks.Free;
   end;
@@ -167,7 +155,6 @@ begin
   FSearchDLL := SafeLoadLibrary('SearchFile.dll');
   if FSearchDLL = 0 then
     ShowMessage('Не удалось загрузить SearchFile.dll');
-//raise Exception.Create('Не удалось загрузить SearchFile.dll');
 end;
 
 procedure TfrmMain.UnloadSearchDLL;
@@ -178,18 +165,13 @@ begin
   end;
 end;
 
-procedure TfrmMain.StatusTask(const TaskIdx: integer; const Status: TTaskStatus(* = System.Threading.TTaskStatus.Created*));
+procedure TfrmMain.StatusTask(const TaskIdx: integer; const Status: TTaskStatus (* = System.Threading.TTaskStatus.Created *) );
 begin
-  try
-    if cdsTasks.Locate('ID', Ord(TaskIdx), []) then begin
-      cdsTasks.Edit;
-      cdsTasksStatus.Value := Ord(Status);
-      cdsTasks.Post;
-    end
-  except
-    on E: Exception do begin
-    end;
-  end;
+  if cdsTasks.Locate('ID', Ord(TaskIdx), []) then begin
+    cdsTasks.Edit;
+    cdsTasksStatus.Value := Ord(Status);
+    cdsTasks.Post;
+  end
 end;
 
 procedure TfrmMain.bSelectFileClick(Sender: TObject);
@@ -214,7 +196,9 @@ var
 begin
   TaskNum := IndexStr(cdsTasksTask.AsString, RealTasks);
   if TaskNum = cdsTasksID.AsInteger then begin
-
+    cdsTasks.Edit;
+    cdsTasksTimeStart.AsString := '';
+    cdsTasksTimeEnd.AsString := '';
     case TaskNum of
       0: begin //поиск файлов
           if not DirectoryExists(eFolder.Text) then
@@ -222,12 +206,12 @@ begin
           if Trim(eMasks.Text) = '' then
             raise Exception.Create('Укажите маски для поиска.');
 
+          mResults.Lines.Add('=== Старт поиска файлов ===');
+
           ThFindFiles := TThFindFiles.Create(True); //создаем поток
 
-          cdsTasks.Edit;
           ThFindFiles.TaskID := cdsTasksID.AsInteger;
           cdsTasksFThread.AsLargeInt := integer(ThFindFiles);
-          cdsTasks.Post;
 
           ThFindFiles.TaskID := cdsTasksID.AsInteger;
 
@@ -254,14 +238,14 @@ begin
           if Trim(eSearchPatterns.Text) = '' then
             raise Exception.Create('Укажите наблоны для поиска.');
 
+          mResults.Lines.Add('=== Старт поиска шаблонов ===');
+
           ThSearchPattern := TThSearchPattern.Create(True); //создаем поток
 
-          cdsTasks.Edit;
           ThSearchPattern.TaskID := cdsTasksID.AsInteger;
           cdsTasksFThread.AsLargeInt := integer(ThSearchPattern);
-          cdsTasks.Post;
 
-  //eFile.Text := 'D:\tmp\35645\load_wds_contract.sql';//'D:\Insures\insures5ase\bin\iRefBooks.rsm'; // для тестов\
+  //eFile.Text := 'D:\tmp\35645\load_wds_contract.sql';//'D:\Insures\insures5ase\bin\iRefBooks.rsm'; // для тестов
 //eFile_s.Text := 'C:\DevelopXE\Declension.7z';
 
           with ThSearchPattern do begin
@@ -280,22 +264,19 @@ begin
           end;
         end;
       2: begin //архивирование
-          if Trim(eFolder.Text) = '' then begin
-            ShowMessage('Укажите папку для архивирования');
-            Exit;
-          end;
+          if Trim(eFolder.Text) = '' then
+            raise Exception.Create('Укажите папку для архивирования');
+
           ArchiveName := IncludeTrailingPathDelimiter(eFolder.Text) + 'archive_' + FormatDateTime('yyyymmdd_hhnnss', now) + '.zip';
 
-          mResults.Clear;
           mResults.Lines.Add('=== Начало архивирования ===');
           mResults.Lines.Add('Папка: ' + eFolder.Text);
           mResults.Lines.Add('Архив: ' + ArchiveName);
-          mResults.Lines.Add('----------------------------');
+//mResults.Lines.Add('----------------------------');
 
           ArchTask := TTask.Create(
             procedure
             var
-              ArchiveFunc: TArchiveFolderFunc;
               Res: Boolean;
               FolderPath, ArchivePath: PChar;
               FTerminateEvent: TEvent;
@@ -309,20 +290,20 @@ begin
                   StatusTask(TaskNum, System.Threading.TTaskStatus.Running);
                 end);
               try
-        //Получаем функцию из DLL
 
+//функцию из DLL
                 ArchiveFunc := GetProcAddress(F7ZipDLL, 'ArchiveFolder');
-//                StopArchiving := GetProcAddress(F7ZipDLL, 'StopArchiving');
+                StopArchiving := GetProcAddress(F7ZipDLL, 'StopArchiving');
 
                 if not Assigned(ArchiveFunc) then
                   raise Exception.Create('Функция ArchiveFolder не найдена в DLL');
-        //Подготавливаем параметры
+//параметры
                 FolderPath := StrAlloc(Length(eFolder.Text) + 1);
                 ArchivePath := StrAlloc(Length(ArchiveName) + 1);
                 try
                   StrPCopy(FolderPath, eFolder.Text);
                   StrPCopy(ArchivePath, ArchiveName);
-          //Вызываем функцию архивации с callback'ом
+//Вызов функцию архивации с callback'ом
                   Res := ArchiveFunc(FolderPath, ArchivePath, @ArchiveLogCallback);
                   if Res then begin
                     if TThread.CheckTerminated then begin
@@ -366,7 +347,8 @@ begin
         end
     else
       ShowMessage(Format('Отсутствует обработка функции: "%s"', [cdsTasksTask.AsString]));
-    end
+    end;
+    cdsTasks.Post;
   end
   else
     ShowMessage(Format('Код задачи "%s" не соотвествует функции в DLL.', [cdsTasksTask.AsString]));
@@ -379,22 +361,15 @@ begin
       if Assigned(ThFindFiles) then
         ThFindFiles.Stop;
     1:
-      if Assigned(ThSearchPattern) then
-        ThSearchPattern.Stop;
+        if Assigned(ThSearchPattern) then
+          ThSearchPattern.Stop;
     2:
       if Assigned(ArchTask) then
         if ArchTask.Status = TTaskStatus.Running then begin
+          StopArchiving;
           ArchTask.Cancel;
-//          ArchStop := True;
-//          StopArchiving;
-          mResults.Lines.Add('ArchStop := True');
         end;
   end;
-end;
-
-procedure TfrmMain.btnArchiveClick(Sender: TObject);
-begin
-  StartArchiveTask;
 end;
 
 procedure TfrmMain.btnViewResultsClick(Sender: TObject);
@@ -411,27 +386,30 @@ end;
 procedure TfrmMain.cdsTasksCalcFields(DataSet: TDataSet);
 begin
 //(Created, WaitingToRun, Running, Completed, WaitingForChildren, Canceled, Exception);
-  case cdsTasksStatus.AsInteger of
-    0, 1, 4: cdsTasksSStatus.Value := 'Ожидание';
-    2: begin
-        cdsTasksSStatus.Value := 'Выполняется';
-        if cdsTasksTimeStart.Value = null then
-          cdsTasksTimeStart.Value := now();
-      end;
-    3: begin
-        cdsTasksSStatus.Value := 'Завершено';
-        if cdsTasksTimeEnd.Value = null then
-          cdsTasksTimeEnd.Value := now();
-      end;
-    5: begin
-        cdsTasksSStatus.Value := 'Отменено';
-      end;
-    6: begin
-        cdsTasksSStatus.Value := 'Ошибка';
-      end;
-  else
-    cdsTasksSStatus.Value := '???';
-  end
+  if cdsTasks.Active then
+    case cdsTasksStatus.AsInteger of
+      0, 1, 4: begin
+          cdsTasksSStatus.Value := 'Ожидание';
+        end;
+      2: begin
+          cdsTasksSStatus.Value := 'Выполняется';
+          if cdsTasksTimeStart.AsFloat < 1 then
+            cdsTasksTimeStart.Value := now();
+        end;
+      3: begin
+          cdsTasksSStatus.Value := 'Завершено';
+          if cdsTasksTimeEnd.AsFloat < 1 then
+            cdsTasksTimeEnd.Value := now();
+        end;
+      5: begin
+          cdsTasksSStatus.Value := 'Отменено';
+        end;
+      6: begin
+          cdsTasksSStatus.Value := 'Ошибка';
+        end;
+    else
+      cdsTasksSStatus.Value := '???';
+    end
 end;
 
 procedure TfrmMain.LoadSevenZipDLL;
@@ -453,94 +431,6 @@ begin
     FreeLibrary(F7ZipDLL);
     F7ZipDLL := 0;
   end;
-end;
-
-procedure TfrmMain.StartArchiveTask;
-var
-  Thread: TThread;
-  ArchiveName: string;
-begin
-  if Trim(eFolder.Text) = '' then begin
-    ShowMessage('Укажите папку для архивирования');
-    Exit;
-  end;
-  ArchiveName := IncludeTrailingPathDelimiter(eFolder.Text) + 'archive_' + FormatDateTime('yyyymmdd_hhnnss', now) + '.zip';
-
-  mResults.Clear;
-  mResults.Lines.Add('=== Начало архивирования ===');
-  mResults.Lines.Add('Папка: ' + eFolder.Text);
-  mResults.Lines.Add('Архив: ' + ArchiveName);
-  mResults.Lines.Add('----------------------------');
-
-  //Запускаем в отдельном потоке
-  Thread := TThread.CreateAnonymousThread(
-    procedure
-    var
-      ArchiveFunc: TArchiveFolderFunc;
-      Res: Boolean;
-      FolderPath, ArchivePath: PChar;
-      FTerminateEvent: TEvent;
-    begin
-      FTerminateEvent := TEvent.Create(nil, True, False, 'FTerminateEvent');
-//FTerminateEvent.WaitFor(100);
-
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          StatusTask(2, System.Threading.TTaskStatus.Running);
-        end);
-      try
-        //Получаем функцию из DLL
-        ArchiveFunc := GetProcAddress(F7ZipDLL, 'ArchiveFolder');
-        if not Assigned(ArchiveFunc) then
-          raise Exception.Create('Функция ArchiveFolder не найдена в DLL');
-        //Подготавливаем параметры
-        FolderPath := StrAlloc(Length(eFolder.Text) + 1);
-        ArchivePath := StrAlloc(Length(ArchiveName) + 1);
-        try
-          StrPCopy(FolderPath, eFolder.Text);
-          StrPCopy(ArchivePath, ArchiveName);
-          //Вызываем функцию архивации с callback'ом
-          Res := ArchiveFunc(FolderPath, ArchivePath, @ArchiveLogCallback);
-          if Res then begin
-            if Thread.CheckTerminated then begin
-              TThread.Synchronize(nil,
-                procedure
-                begin
-                  StatusTask(2, System.Threading.TTaskStatus.Canceled);
-                end);
-            end
-            else
-            begin
-              TThread.Synchronize(nil,
-                procedure
-                begin
-                  StatusTask(2, System.Threading.TTaskStatus.Completed);
-                end);
-            end
-          end
-          else begin
-            TThread.Synchronize(nil,
-              procedure
-              begin
-                StatusTask(2, System.Threading.TTaskStatus.Exception);
-              end);
-          end;
-        finally
-          StrDispose(FolderPath);
-          StrDispose(ArchivePath);
-        end;
-      except
-        on E: Exception do begin
-          TThread.Synchronize(nil,
-            procedure
-            begin
-              StringReceived('Ошибка: ' + E.Message);
-            end);
-        end;
-      end;
-    end); //procedure Thread
-  Thread.Start;
 end;
 
 procedure TfrmMain.StringReceived(const S: string);
