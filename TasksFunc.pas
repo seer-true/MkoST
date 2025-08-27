@@ -15,7 +15,6 @@ uses
 type
   TStringEvent = procedure(const S: string) of object;
   TStatusTask = procedure(const TaskIdx: Integer; const Status: TTaskStatus) of object;
-  TGetPosition = procedure(const PosPatt: Int64) of object;
 
   ///<summary>
   ///Базовый класс для вызова потоков
@@ -64,7 +63,6 @@ uses
   CommonMkos;
 
 { TBaseThread }
-
 constructor TBaseThread.Create(ACreateSuspended: Boolean);
 begin
   inherited Create(ACreateSuspended);
@@ -82,7 +80,7 @@ end;
 
 procedure TBaseThread.LoadFunc(hDll: THandle; NameFunc: string);
 begin
-  //ищем функцию из DLL
+  //ищем функции в DLL
   if hDll = 0 then
     raise Exception.Create('Для функции "' + NameFunc + '" Dll не загружена.');
   if NameFunc.IsEmpty then
@@ -100,7 +98,7 @@ begin
   if not Terminated then
   begin
     FAddMess := 'Попытка остановить задачу..';
-    //if Assigned(OnStringReceived) then
+    //if Assigned(OnStringReceived) then // лучше где-то в одном месте в базовом классе
     Synchronize(
       procedure
       begin
@@ -119,7 +117,6 @@ begin
 end;
 
 { TThFindFiles }
-
 procedure TThFindFiles.Execute;
 var
   SearchFunc: TSearchFilesFunc;
@@ -183,7 +180,6 @@ begin
 end;
 
 { TThSearchPattern }
-
 procedure TThSearchPattern.Execute;
 var
   SearchPattern: TSearchPattern;

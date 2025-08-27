@@ -3,7 +3,7 @@ object frmMain: TfrmMain
   Top = 0
   Caption = 'MKOS - '#1052#1086#1076#1091#1083#1100#1085#1086#1077' '#1087#1088#1080#1083#1086#1078#1077#1085#1080#1077
   ClientHeight = 592
-  ClientWidth = 653
+  ClientWidth = 638
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,32 +12,31 @@ object frmMain: TfrmMain
   Font.Style = []
   ShowHint = True
   OnCreate = FormCreate
+  PixelsPerInch = 96
   TextHeight = 13
   object mResults: TMemo
     Left = 0
     Top = 341
-    Width = 653
+    Width = 638
     Height = 210
     Align = alClient
     ScrollBars = ssBoth
     TabOrder = 0
-    ExplicitWidth = 649
-    ExplicitHeight = 209
+    ExplicitLeft = -1
   end
   object pLower: TPanel
     Left = 0
     Top = 551
-    Width = 653
+    Width = 638
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 550
-    ExplicitWidth = 649
+    ExplicitWidth = 653
     DesignSize = (
-      653
+      638
       41)
     object btnViewResults: TButton
-      Left = 512
+      Left = 497
       Top = 6
       Width = 120
       Height = 25
@@ -45,17 +44,30 @@ object frmMain: TfrmMain
       Caption = #1054#1095#1080#1089#1090#1080#1090#1100
       TabOrder = 0
       OnClick = btnViewResultsClick
-      ExplicitLeft = 508
+      ExplicitLeft = 512
     end
   end
   object pTasks: TPanel
     Left = 0
     Top = 186
-    Width = 653
+    Width = 638
     Height = 155
     Align = alTop
     TabOrder = 2
-    ExplicitWidth = 649
+    ExplicitWidth = 653
+    DesignSize = (
+      638
+      155)
+    object bSelect7z: TSpeedButton
+      Left = 606
+      Top = 122
+      Width = 23
+      Height = 23
+      Hint = #1053#1072#1081#1090#1080' '#1072#1088#1093#1080#1074#1072#1090#1086#1088' 7z'
+      Anchors = [akTop, akRight]
+      Caption = '7z'
+      OnClick = bSelect7zClick
+    end
     object bStartTask: TButton
       Left = 1
       Top = 122
@@ -77,7 +89,7 @@ object frmMain: TfrmMain
     object dbgTasks: TDBGrid
       Left = 1
       Top = 1
-      Width = 651
+      Width = 636
       Height = 115
       Align = alTop
       DataSource = dsTask
@@ -88,18 +100,27 @@ object frmMain: TfrmMain
       TitleFont.Name = 'Tahoma'
       TitleFont.Style = []
     end
+    object e7zName: TEdit
+      Left = 265
+      Top = 124
+      Width = 335
+      Height = 21
+      ReadOnly = True
+      TabOrder = 3
+      Text = 'C:\Program Files\7-Zip\7z.exe'
+    end
   end
   object grpFindFiles: TGroupBox
     Left = 0
     Top = 0
-    Width = 653
+    Width = 638
     Height = 85
     Align = alTop
     Caption = #1055#1086#1080#1089#1082' '#1092#1072#1081#1083#1086#1074
     TabOrder = 3
-    ExplicitWidth = 649
+    ExplicitWidth = 653
     DesignSize = (
-      653
+      638
       85)
     object lblMasks: TLabel
       Left = 8
@@ -109,7 +130,7 @@ object frmMain: TfrmMain
       Caption = #1052#1072#1089#1082#1080' '#1092#1072#1081#1083#1086#1074':'
     end
     object bSelectFolder: TSpeedButton
-      Left = 622
+      Left = 607
       Top = 11
       Width = 23
       Height = 23
@@ -122,35 +143,36 @@ object frmMain: TfrmMain
     object eFolder: TEdit
       Left = 8
       Top = 13
-      Width = 608
+      Width = 593
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       TextHint = #1059#1082#1072#1078#1080#1090#1077' '#1082#1072#1090#1072#1083#1086#1075' '#1076#1083#1103' '#1087#1086#1080#1089#1082#1072' '#1092#1072#1081#1083#1086#1074
+      ExplicitWidth = 608
     end
     object eMasks: TEdit
       Left = 13
       Top = 53
-      Width = 637
+      Width = 622
       Height = 21
       Hint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
       TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1084#1072#1089#1082#1080' '#1076#1083#1103' '#1087#1088#1089#1080#1082#1072' '#1092#1072#1081#1083#1086#1074' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': *.dpr;*.txt)'
-      ExplicitWidth = 633
+      ExplicitWidth = 637
     end
   end
   object grpSearchInFile: TGroupBox
     Left = 0
     Top = 85
-    Width = 653
+    Width = 638
     Height = 101
     Align = alTop
     Caption = #1055#1086#1080#1089#1082' '#1074' '#1092#1072#1081#1083#1077
     TabOrder = 4
-    ExplicitWidth = 649
+    ExplicitWidth = 653
     DesignSize = (
-      653
+      638
       101)
     object lblSearchInFile: TLabel
       Left = 8
@@ -160,7 +182,7 @@ object frmMain: TfrmMain
       Caption = #1055#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1076#1083#1103' '#1087#1086#1080#1089#1082#1072' '#1074' '#1092#1072#1081#1083#1077':'
     end
     object bSelectFile: TSpeedButton
-      Left = 623
+      Left = 608
       Top = 20
       Width = 23
       Height = 23
@@ -168,21 +190,20 @@ object frmMain: TfrmMain
       Anchors = [akTop, akRight]
       Caption = #1060
       OnClick = bSelectFileClick
-      ExplicitLeft = 570
     end
     object eSearchPatterns: TEdit
       Left = 8
       Top = 64
-      Width = 566
+      Width = 551
       Height = 21
       Hint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       TextHint = #1042#1074#1077#1076#1080#1090#1077' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1080' '#1095#1077#1088#1077#1079' ";" ('#1085#1072#1087#1088#1080#1084#1077#1088': libsec;binsec)'
-      ExplicitWidth = 562
+      ExplicitWidth = 566
     end
     object cbMatches: TComboBox
-      Left = 588
+      Left = 573
       Top = 64
       Width = 57
       Height = 21
@@ -197,17 +218,17 @@ object frmMain: TfrmMain
         '50'
         '100'
         '1000')
-      ExplicitLeft = 584
+      ExplicitLeft = 588
     end
     object eFile: TEdit
       Left = 9
       Top = 21
-      Width = 608
+      Width = 593
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 2
       TextHint = #1059#1082#1072#1078#1080#1090#1077' '#1092#1072#1081#1083' '#1076#1083#1103' '#1087#1086#1080#1089#1082#1072' '#1087#1086#1089#1083#1077#1076#1086#1074#1072#1090#1077#1083#1100#1085#1086#1089#1090#1077#1081
-      ExplicitWidth = 604
+      ExplicitWidth = 608
     end
   end
   object OpenDialog: TFileOpenDialog
@@ -233,7 +254,7 @@ object frmMain: TfrmMain
     Params = <>
     OnCalcFields = cdsTasksCalcFields
     Left = 480
-    Top = 366
+    Top = 226
     object cdsTasksID: TIntegerField
       DisplayWidth = 10
       FieldName = 'ID'
@@ -274,7 +295,7 @@ object frmMain: TfrmMain
   object dsTask: TDataSource
     DataSet = cdsTasks
     Left = 550
-    Top = 366
+    Top = 226
   end
   object FileOpenDialog: TOpenTextFileDialog
     Left = 580

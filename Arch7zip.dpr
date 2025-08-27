@@ -1,13 +1,21 @@
 library Arch7zip;
 
 uses
-  System.SysUtils,
+{$IFDEF DEBUG}
+  //FastMM4 in '..\FastMM4\FastMM4.pas'
+{$ENDIF }
+//System.SysUtils,
   System.Classes,
-//System.IOUtils,
   System.StrUtils,
   Winapi.Windows,
-  Vcl.Forms,
-  Vcl.Dialogs,
+  System.SysUtils, //DirectoryExists, FileExists, DeleteFile, строковых операций
+//System.Classes,       // Пригодится, если будешь расширять (например, TFileStream)
+  System.Variants, //Обязательно! Для работы с OleVariant и COM-объектами
+//Winapi.Windows,       // Для GetFileAttributesEx, TWin32FileAttributeData, HANDLE и др.
+//Winapi.ShlObj, //Опционально: для констант Shell, но не обязателен здесь
+  Winapi.ActiveX, //Обязательно! Для CoInitialize, CoUninitialize, IEnumVariant
+//System.Win.ComObj,
+  Vcl.OleAuto,
   CommonMkos in 'CommonMkos.pas';
 {$R *.res}
 
@@ -15,8 +23,8 @@ uses
 type
   TLogCallback = procedure(Msg: PChar); stdcall;
 
-const
-  SevenZipPath = 'C:\Program Files\7-Zip\7z.exe'; //Стандартный путь, можно изменить
+(* const
+  SevenZipPath = 'C:\Program Files\7-Zip\7z.exe'; //Стандартный путь, можно изменить *)
 
 var
   ArchStopEvent: THandle = 0;
@@ -76,21 +84,30 @@ begin
     Exit;
   end;
   try
-    //Добавляем -bsp1 для вывода информации о прогрессе
+//-bsp1 для вывода информации о прогрессе
     CmdLine := Format('"%s" a -tzip -bb3 "%s" "%s\*"', [SevenZipPath, string(ArchiveName), string(FolderPath)]);
+//CmdLine := Format('a -tzip -bb3 "%s" "%s\*"', [string(ArchiveName), string(FolderPath)]);
     FillChar(StartupInfo, SizeOf(TStartupInfo), 0);
     StartupInfo.cb := SizeOf(TStartupInfo);
     StartupInfo.dwFlags := STARTF_USESHOWWINDOW or STARTF_USESTDHANDLES;
     StartupInfo.wShowWindow := SW_HIDE;
     StartupInfo.hStdOutput := hWritePipe;
     StartupInfo.hStdError := hWritePipe;
-    if CreateProcess(nil, PChar(CmdLine), nil, nil, True, CREATE_NO_WINDOW, nil, nil, StartupInfo, ProcessInfo) then
+    if CreateProcess(PChar(SevenZipPath), //имя исполняемого модуля
+      PChar(CmdLine), //командная строка
+      nil, //защита процесса
+      nil, //защита потока
+      True, //признак наследования дескриптора
+      CREATE_NO_WINDOW, //флаги создания процесса
+      nil, //блок новой среды окружения
+      nil, //текущий каталог const
+      StartupInfo, //вид главного окна
+      ProcessInfo//информация о процессе
+      ) then
     begin
       try
         CloseHandle(hWritePipe);
-        Callback(PChar('Начато архивирование: ' + string(FolderPath)));
         while True do begin
-
           if WaitForSingleObject(ArchStopEvent, 100) = WAIT_OBJECT_0 then begin //проверяем событие остановки
             Callback('Получен сигнал остановки...');
             if not TerminateProcess(ProcessInfo.hProcess, 0) then
@@ -112,8 +129,8 @@ begin
        //анализируем вывод для определения текущего файла
           Buffer[BytesRead] := #0;
           Output := string(AnsiString(Buffer));
-          if Pos('U', Output) = 1 then //Строка начинается с "+ " - это информация о файле
-          begin
+          if Pos('+', Output) = 1 then //Строка начинается с "+ " - это информация о файле
+          begin //как показала практика 7z просает свой вывод пачками и это не работает
             LastFile := Trim(Copy(Output, 3, MaxInt));
             Callback(PChar('Обработка файла: ' + LastFile));
           end
@@ -153,11 +170,153 @@ begin
     SetEvent(ArchStopEvent); //Сигнализируем о необходимости остановки
 end;
 
+//=========================================================================
+function GetFileSize(const FileName: string): Int64;
+var
+  Info: TWin32FileAttributeData;
+begin
+  if GetFileAttributesEx(PChar(FileName), GetFileExInfoStandard, @Info) then
+  begin
+    Result := Int64(Info.nFileSizeHigh) shl 32 + Info.nFileSizeLow;
+  end
+  else
+    Result := 0;
+end;
+
+function ArchiveFolderAPI(FolderPath, ArchiveName: PChar; Callback: TLogCallback): Boolean; stdcall;
+var
+  Shell: OleVariant;
+  SourceFolder, DestZip: OleVariant;
+  NameSpace: OleVariant;
+  Items: OleVariant;
+  Item: OleVariant;
+  Enum: IEnumVariant;
+  Fetched: Cardinal;
+  FileName: string;
+
+  ZipHeader: array [0 .. 21] of Byte;
+  FileStream: TFileStream;
+begin
+  Result := False;
+
+  //Проверка аргументов
+  if not Assigned(Callback) then
+  begin
+    Exit;
+  end;
+
+  try
+    //Инициализация COM для текущего потока (важно для потокобезопасности)
+    CoInitialize(nil);
+
+    try
+      //Проверка существования папки
+      if not DirectoryExists(FolderPath) then
+      begin
+        Callback(PChar('Ошибка: исходная папка не найдена — ' + string(FolderPath)));
+        Exit;
+      end;
+
+      //Проверка пути архива
+      if string(ArchiveName) = '' then
+      begin
+        Callback('Ошибка: имя архива не указано');
+        Exit;
+      end;
+
+      //Удаляем старый ZIP, если существует
+      if FileExists(ArchiveName) then
+      begin
+        if not DeleteFile(ArchiveName) then
+        begin
+          Callback(PChar('Ошибка: не удалось удалить существующий архив — ' + string(ArchiveName)));
+          Exit;
+        end;
+      end;
+
+      //Создаём пустой ZIP-файл
+      ZeroMemory(@ZipHeader, SizeOf(ZipHeader));
+  //Сигнатура EOCD: $06054b50 ('PK\005\006')
+      ZipHeader[0] := $50;
+      ZipHeader[1] := $4B;
+      ZipHeader[2] := $05;
+      ZipHeader[3] := $06;
+
+      FileStream := TFileStream.Create(string(ArchiveName), fmCreate);
+      try
+        FileStream.WriteBuffer(ZipHeader, SizeOf(ZipHeader)); //Теперь OK: ZipHeader — переменная
+      finally
+        FileStream.Free;
+      end;
+
+      //Создание объекта Shell
+      Shell := CreateOleObject('Shell.Application');
+
+      //Получаем namespace для ZIP-файла (архив воспринимается как папка)
+      DestZip := Shell.NameSpace(string(ArchiveName));
+      SourceFolder := Shell.NameSpace(string(FolderPath));
+
+      //Получаем список элементов (файлы и папки)
+      Items := SourceFolder.Items;
+
+      //Передаём в архив все элементы
+      Enum := IEnumVariant(IUnknown(Items._NewEnum));
+      if Enum <> nil then
+      begin
+        while Enum.Next(1, Item, Fetched) = S_OK do
+        begin
+          //Получаем имя файла/папки
+          FileName := Item.Name;
+          Callback(PChar('Добавление: ' + FileName));
+
+          try
+            //Копируем элемент в ZIP (по умолчанию — сжатие)
+            DestZip.CopyHere(Item, 20); //20 = не показывать диалоги, не спрашивать подтверждение
+          except
+            on E: Exception do
+            begin
+              Callback(PChar('Ошибка при добавлении "' + FileName + '": ' + E.Message));
+            end;
+          end;
+
+          Sleep(1000); //Делаем паузу, чтобы Shell успел обработать
+
+        end;
+      end;
+
+//Проверка результата
+      if FileExists(ArchiveName) and (GetFileSize(string(ArchiveName)) > 4) then
+      begin
+        Callback(PChar(Format('ZIP-архив успешно создан: %s', [string(ArchiveName)])));
+        Result := True;
+      end
+      else
+      begin
+        Callback(PChar('Ошибка: ZIP-файл пуст или не создан'));
+      end;
+
+    finally
+      CoUninitialize;
+    end;
+
+  except
+    on E: Exception do
+    begin
+      if Assigned(Callback) then
+        Callback(PChar('Исключение: ' + E.Message));
+    end;
+  end;
+end;
+
+//=========================================================================
 exports
 //InitArchiving,
   ArchiveFolder,
-  StopArchiving;
+  StopArchiving, ArchiveFolderAPI;
 
 begin
+{$IFDEF DEBUG}
+  ReportMemoryLeaksOnShutdown := True; //отслеживание утечек памяти
+{$ENDIF}
 
 end.

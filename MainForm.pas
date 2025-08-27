@@ -55,6 +55,8 @@ type
     eSearchPatterns: TEdit;
     cbMatches: TComboBox;
     eFile: TEdit;
+    e7zName: TEdit;
+    bSelect7z: TSpeedButton;
 
     procedure FormCreate(Sender: TObject);
     procedure btnViewResultsClick(Sender: TObject);
@@ -65,6 +67,7 @@ type
     procedure cbMatchesKeyPress(Sender: TObject; var Key: Char);
     procedure bSelectFolderClick(Sender: TObject);
     procedure bSelectFileClick(Sender: TObject);
+    procedure bSelect7zClick(Sender: TObject);
   private
     procedure StringReceived(const S: string);
     procedure StatusTask(const TaskIdx: integer; const Status: TTaskStatus = System.Threading.TTaskStatus.Created);
@@ -117,6 +120,7 @@ var
 begin
   LoadSearchDLL;
   LoadSevenZipDLL;
+  e7zName.Text := SevenZipPath;
   ListTasks := TStringList.Create;
 //cdsTasks.CreateDataSet;
   cdsTasks.Open;
@@ -130,7 +134,7 @@ begin
     end;
     ListTasks.Clear;
     //архивирующая DLL
-    ShowDllExports(F7ZipDLL, ListTasks);
+    ShowDllExports(FZipDLL, ListTasks);
     for var i := 0 to Length(RealTasks) - 1 do begin
       if ListTasks.IndexOf(RealTasks[i]) >= 0 then begin
         cdsTasks.InsertRecord([i, RealTasks[i], 0, null, null]);
@@ -172,6 +176,15 @@ begin
     cdsTasksStatus.Value := Ord(Status);
     cdsTasks.Post;
   end
+end;
+
+procedure TfrmMain.bSelect7zClick(Sender: TObject);
+begin
+  FileOpenDialog.FileName := e7zName.Text;
+  if FileOpenDialog.Execute then begin
+    e7zName.Text := FileOpenDialog.FileName;
+    SevenZipPath := e7zName.Text;
+  end;
 end;
 
 procedure TfrmMain.bSelectFileClick(Sender: TObject);
@@ -263,7 +276,7 @@ begin
             Start; //запускаем поток
           end;
         end;
-      2: begin //архивирование
+      2: begin //архивирование 7Z
           if Trim(eFolder.Text) = '' then
             raise Exception.Create('Укажите папку для архивирования');
 
@@ -292,11 +305,94 @@ begin
               try
 
 //функцию из DLL
-                ArchiveFunc := GetProcAddress(F7ZipDLL, 'ArchiveFolder');
-                StopArchiving := GetProcAddress(F7ZipDLL, 'StopArchiving');
+                ArchiveFunc := GetProcAddress(FZipDLL, PChar(cdsTasksTask.AsString) (* 'ArchiveFolder' *) );
+                StopArchiving := GetProcAddress(FZipDLL, 'StopArchiving');
 
                 if not Assigned(ArchiveFunc) then
-                  raise Exception.Create('Функция ArchiveFolder не найдена в DLL');
+                  raise Exception.Create('Функция ' + cdsTasksTask.AsString + ' не найдена в DLL');
+//параметры
+                FolderPath := StrAlloc(Length(eFolder.Text) + 1);
+                ArchivePath := StrAlloc(Length(ArchiveName) + 1);
+                try
+                  StrPCopy(FolderPath, eFolder.Text);
+                  StrPCopy(ArchivePath, ArchiveName);
+//Вызов функцию архивации с callback'ом
+                  Res := ArchiveFunc(FolderPath, ArchivePath, @ArchiveLogCallback);
+                  if Res then begin
+                    if TThread.CheckTerminated then begin
+                      TThread.Synchronize(TThread.Current,
+                        procedure
+                        begin
+                          StatusTask(TaskNum, System.Threading.TTaskStatus.Canceled);
+                        end);
+                    end
+                    else
+                    begin
+                      TThread.Synchronize(nil,
+                        procedure
+                        begin
+                          StatusTask(TaskNum, System.Threading.TTaskStatus.Completed);
+                        end);
+                    end
+                  end
+                  else begin
+                    TThread.Synchronize(nil,
+                      procedure
+                      begin
+                        StatusTask(TaskNum, System.Threading.TTaskStatus.Exception);
+                      end);
+                  end;
+                finally
+                  StrDispose(FolderPath);
+                  StrDispose(ArchivePath);
+                end;
+              except
+                on E: Exception do begin
+                  TThread.Synchronize(nil,
+                    procedure
+                    begin
+                      StringReceived('Ошибка: ' + E.Message);
+                    end);
+                end;
+              end;
+            end);
+          ArchTask.Start;
+        end;
+      3: begin //архивирование 7Z
+          if Trim(eFolder.Text) = '' then
+            raise Exception.Create('Укажите папку для архивирования');
+
+//          ArchiveName := IncludeTrailingPathDelimiter(eFolder.Text) + 'archive_' + FormatDateTime('yyyymmdd_hhnnss', now) + '.zip';
+          ArchiveName := 'D:\Archive_' + FormatDateTime('yyyymmdd_hhnnss', now) + '.zip';
+
+          mResults.Lines.Add('=== Начало архивирования ===');
+          mResults.Lines.Add('Папка: ' + eFolder.Text);
+          mResults.Lines.Add('Архив: ' + ArchiveName);
+//mResults.Lines.Add('----------------------------');
+
+          ArchTask := TTask.Create(
+            procedure
+            var
+              Res: Boolean;
+              FolderPath, ArchivePath: PChar;
+              FTerminateEvent: TEvent;
+            begin
+              FTerminateEvent := TEvent.Create(nil, True, False, 'FTerminateEvent');
+//FTerminateEvent.WaitFor(100);
+
+              TThread.Synchronize(TThread.Current,
+                procedure
+                begin
+                  StatusTask(TaskNum, System.Threading.TTaskStatus.Running);
+                end);
+              try
+
+//функцию из DLL
+                ArchiveFunc := GetProcAddress(FZipDLL, PChar(cdsTasksTask.AsString) (* 'ArchiveFolder' *) );
+                StopArchiving := GetProcAddress(FZipDLL, 'StopArchiving');
+
+                if not Assigned(ArchiveFunc) then
+                  raise Exception.Create('Функция ' + cdsTasksTask.AsString + ' не найдена в DLL');
 //параметры
                 FolderPath := StrAlloc(Length(eFolder.Text) + 1);
                 ArchivePath := StrAlloc(Length(ArchiveName) + 1);
@@ -361,8 +457,8 @@ begin
       if Assigned(ThFindFiles) then
         ThFindFiles.Stop;
     1:
-        if Assigned(ThSearchPattern) then
-          ThSearchPattern.Stop;
+      if Assigned(ThSearchPattern) then
+        ThSearchPattern.Stop;
     2:
       if Assigned(ArchTask) then
         if ArchTask.Status = TTaskStatus.Running then begin
@@ -414,8 +510,8 @@ end;
 
 procedure TfrmMain.LoadSevenZipDLL;
 begin
-  F7ZipDLL := SafeLoadLibrary('Arch7zip.dll');
-  if F7ZipDLL = 0 then
+  FZipDLL := SafeLoadLibrary('Arch7zip.dll');
+  if FZipDLL = 0 then
     ShowMessage('Не удалось загрузить Arch7zip.dll');
 //raise Exception.Create('Не удалось загрузить Arch7zip.dll');
 end;
@@ -427,9 +523,9 @@ end;
 
 procedure TfrmMain.UnloadSevenZipDLL;
 begin
-  if F7ZipDLL <> 0 then begin
-    FreeLibrary(F7ZipDLL);
-    F7ZipDLL := 0;
+  if FZipDLL <> 0 then begin
+    FreeLibrary(FZipDLL);
+    FZipDLL := 0;
   end;
 end;
 
